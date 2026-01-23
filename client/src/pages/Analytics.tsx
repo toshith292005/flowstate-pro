@@ -6,29 +6,22 @@ import { CheckCircle2, Circle, Clock, Activity } from "lucide-react";
 import { useEffect, useState, useMemo } from 'react';
 import axios from "axios";
 
-// 1. DYNAMIC API URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Analytics() {
-  
-  // STATE: Load Real Data from API
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // PRIVACY FIX: Get User Email
     const user = JSON.parse(localStorage.getItem("flowstate_user") || "{}");
     const userEmail = user.email;
 
     const fetchTasks = async () => {
-      // If no user is logged in, stop here
       if (!userEmail) {
         setIsLoading(false);
         return;
       }
-
       try {
-        // UPDATED: Use Dynamic API URL
         const res = await axios.get(`${API_BASE_URL}/api/tasks`, {
             params: { email: userEmail }
         });
@@ -42,10 +35,8 @@ export default function Analytics() {
     fetchTasks();
   }, []);
 
-  // 2. HELPER: Generate Last 30 Days (TIMEZONE FIXED)
   const trendData = useMemo(() => {
     const days = [];
-    
     const getLocalYYYYMMDD = (d: Date) => {
       const offset = d.getTimezoneOffset() * 60000;
       return new Date(d.getTime() - offset).toISOString().split('T')[0];
@@ -62,14 +53,10 @@ export default function Analytics() {
     for (let i = 29; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      
       const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const localDateStr = getLocalYYYYMMDD(d); 
 
-      const createdCount = projects.filter((p: any) => 
-        isSameCalendarDay(d, p.createdAt)
-      ).length;
-
+      const createdCount = projects.filter((p: any) => isSameCalendarDay(d, p.createdAt)).length;
       const completedCount = projects.filter((p: any) => {
         if (p.status !== "Completed") return false;
         if (p.completedAt === localDateStr) return true;
@@ -77,29 +64,21 @@ export default function Analytics() {
         return false;
       }).length;
 
-      days.push({
-        date: label,
-        created: createdCount,
-        completed: completedCount
-      });
+      days.push({ date: label, created: createdCount, completed: completedCount });
     }
     return days;
   }, [projects]);
 
-  // 3. STATS CALCULATIONS
   const totalTasks = projects.length;
   const completedTasks = projects.filter((p: any) => p.status === "Completed").length;
   const pendingTasks = totalTasks - completedTasks;
   const completionRate = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
-  // 4. PRIORITY DISTRIBUTION
   const priorityCounts = useMemo(() => {
     const high = projects.filter((p: any) => p.priority === "High").length;
     const medium = projects.filter((p: any) => p.priority === "Medium").length;
     const low = projects.filter((p: any) => p.priority === "Low").length;
-
     if (totalTasks === 0) return [{ name: 'No Tasks', value: 1, color: '#333' }];
-
     return [
       { name: 'High', value: high, color: '#f43f5e' },
       { name: 'Medium', value: medium, color: '#f59e0b' },
@@ -114,23 +93,23 @@ export default function Analytics() {
   }
 
   return (
-    <div className="p-6 md:p-10 space-y-8 pb-20">
+    <div className="p-4 md:p-10 space-y-6 md:space-y-8 pb-24">
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Analytics & Insights</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Analytics & Insights</h1>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* KPI Cards - Optimized Grid for Mobile (1 col) to Desktop (4 cols) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatCard title="Total Tasks" value={totalTasks} icon={<Circle size={20} className="text-indigo-400" />} borderColor="border-indigo-500/20" />
         <StatCard title="Completed" value={completedTasks} icon={<CheckCircle2 size={20} className="text-emerald-400" />} borderColor="border-emerald-500/20" />
         <StatCard title="Pending" value={pendingTasks} icon={<Clock size={20} className="text-amber-400" />} borderColor="border-amber-500/20" />
         <StatCard title="Completion Rate" value={`${completionRate}%`} icon={<Activity size={20} className="text-rose-400" />} borderColor="border-rose-500/20" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Task Trends Chart */}
-        <div className="p-6 rounded-3xl bg-black border border-white/10 flex flex-col h-[450px]">
-          <h3 className="text-lg font-bold text-white mb-6">Task Activity (Last 30 Days)</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        {/* Task Trends Chart - Adjusted Height for Mobile */}
+        <div className="p-4 md:p-6 rounded-3xl bg-black border border-white/10 flex flex-col h-[350px] md:h-[450px]">
+          <h3 className="text-base md:text-lg font-bold text-white mb-4 md:mb-6">Task Activity (Last 30 Days)</h3>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trendData}>
@@ -145,10 +124,18 @@ export default function Analytics() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} dy={10} minTickGap={30} />
-                <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#64748b" 
+                  fontSize={10} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  dy={10} 
+                  minTickGap={20} // Adjusted for mobile overlap
+                />
+                <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} width={25} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0A0A0A', borderColor: '#333', borderRadius: '12px', color: '#fff' }} 
+                  contentStyle={{ backgroundColor: '#0A0A0A', borderColor: '#333', borderRadius: '12px', color: '#fff', fontSize: '12px' }} 
                   itemStyle={{ color: '#fff' }}
                 />
                 <Area type="monotone" dataKey="created" name="Created" stroke="#6366f1" fillOpacity={1} fill="url(#colorCreated)" strokeWidth={3} />
@@ -156,31 +143,31 @@ export default function Analytics() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-white/5">
+          <div className="flex items-center justify-center gap-4 md:gap-6 mt-4 pt-4 border-t border-white/5">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-              <span className="text-sm font-medium text-slate-300">Completed</span>
+              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+              <span className="text-xs md:text-sm font-medium text-slate-300">Completed</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-              <span className="text-sm font-medium text-slate-300">Created</span>
+              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+              <span className="text-xs md:text-sm font-medium text-slate-300">Created</span>
             </div>
           </div>
         </div>
 
-        {/* Priority Distribution Chart */}
-        <div className="p-6 rounded-3xl bg-black border border-white/10 flex flex-col h-[450px]">
-          <h3 className="text-lg font-bold text-white mb-2">Priority Distribution</h3>
-          <div className="flex flex-1 items-center">
-            <div className="relative flex-1 h-full">
+        {/* Priority Distribution Chart - Vertical on Mobile */}
+        <div className="p-4 md:p-6 rounded-3xl bg-black border border-white/10 flex flex-col h-[400px] md:h-[450px]">
+          <h3 className="text-base md:text-lg font-bold text-white mb-2">Priority Distribution</h3>
+          <div className="flex flex-col sm:flex-row flex-1 items-center">
+            <div className="relative w-full sm:flex-1 h-[250px] md:h-full">
                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={priorityCounts}
                       cx="50%"
                       cy="50%"
-                      innerRadius={80}
-                      outerRadius={110}
+                      innerRadius={window.innerWidth < 768 ? 60 : 80}
+                      outerRadius={window.innerWidth < 768 ? 90 : 110}
                       paddingAngle={activeTypes > 1 ? 5 : 0} 
                       dataKey="value"
                       stroke="none"
@@ -198,18 +185,18 @@ export default function Analytics() {
                </ResponsiveContainer>
                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                  <div className="text-center"> 
-                   <span className="text-4xl font-black text-white block drop-shadow-lg">{totalTasks}</span>
-                   <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Total</span>
+                   <span className="text-2xl md:text-4xl font-black text-white block drop-shadow-lg">{totalTasks}</span>
+                   <span className="text-[10px] md:text-xs text-slate-400 uppercase tracking-wider font-bold">Total</span>
                  </div>
                </div>
             </div>
-            <div className="w-1/3 pl-4 flex flex-col justify-center gap-4">
+            <div className="w-full sm:w-1/3 flex flex-row sm:flex-col justify-center items-center sm:items-start gap-4 sm:gap-4 sm:pl-4 mt-4 sm:mt-0">
               {priorityCounts.map((item) => (
-                <div key={item.name} className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full shadow-[0_0_8px]" style={{ backgroundColor: item.color, boxShadow: `0 0 8px ${item.color}` }}></div>
-                  <div>
-                    <p className="text-sm font-bold text-white">{item.name}</p>
-                    <p className="text-xs text-slate-500">{item.value} Tasks</p>
+                <div key={item.name} className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-2 md:w-3 h-2 md:h-3 rounded-full shadow-[0_0_8px]" style={{ backgroundColor: item.color, boxShadow: `0 0 8px ${item.color}` }}></div>
+                  <div className="text-left">
+                    <p className="text-xs md:text-sm font-bold text-white">{item.name}</p>
+                    <p className="text-[10px] md:text-xs text-slate-500">{item.value}</p>
                   </div>
                 </div>
               ))}
@@ -223,14 +210,14 @@ export default function Analytics() {
 
 function StatCard({ title, value, icon, borderColor }: any) {
   return (
-    <div className={`p-6 rounded-3xl bg-black border ${borderColor} hover:bg-white/5 transition-colors group`}>
+    <div className={`p-4 md:p-6 rounded-3xl bg-black border ${borderColor} hover:bg-white/5 transition-colors group`}>
       <div className="flex justify-between items-start mb-2">
-        <p className="text-slate-400 text-sm font-medium">{title}</p>
-        <div className="p-2 bg-white/5 rounded-full text-slate-300 group-hover:text-white transition-colors">
+        <p className="text-slate-400 text-xs md:text-sm font-medium">{title}</p>
+        <div className="p-1.5 md:p-2 bg-white/5 rounded-full text-slate-300 group-hover:text-white transition-colors">
           {icon}
         </div>
       </div>
-      <h3 className="text-4xl font-bold text-white mt-2">{value}</h3>
+      <h3 className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">{value}</h3>
     </div>
   );
 }
