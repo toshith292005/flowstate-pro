@@ -2,15 +2,13 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Tooltip as PieTooltip 
 } from 'recharts';
-import { CheckCircle2, Circle, Clock, Activity, ChevronLeft } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Activity } from "lucide-react";
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Analytics() {
-  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -110,14 +108,8 @@ export default function Analytics() {
 
       <div className="relative z-10 p-4 md:p-10 space-y-6 md:space-y-8 pb-24 max-w-7xl mx-auto">
         
-        {/* HEADER WITH BACK BUTTON */}
-        <div className="flex items-center gap-3 md:gap-4">
-            <button 
-                onClick={() => navigate(-1)} 
-                className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-colors active:scale-95 text-slate-300 hover:text-white"
-            >
-                <ChevronLeft size={20} />
-            </button>
+        {/* HEADER (Button Removed) */}
+        <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Analytics & Insights</h1>
         </div>
 
@@ -154,7 +146,7 @@ export default function Analytics() {
                     tickLine={false} 
                     axisLine={false} 
                     dy={10} 
-                    minTickGap={30} // OPTIMIZATION: Prevents overlapping labels on mobile
+                    minTickGap={30} 
                   />
                   <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} width={25} />
                   <Tooltip 
