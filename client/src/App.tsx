@@ -11,6 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword")); // <--- NEW IMPORT
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Calendar = lazy(() => import("./pages/Calendar"));
@@ -59,6 +60,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} /> {/* <--- NEW ROUTE */}
             
             {/* --- PROTECTED ROUTES --- */}
             <Route 
