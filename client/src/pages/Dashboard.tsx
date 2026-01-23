@@ -1,12 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, CheckCircle2, Circle, Search, Calendar, Trash2, Edit2, AlertTriangle, BarChart3, X } from "lucide-react";
+import { Plus, CheckCircle2, Circle, Search, Calendar, Trash2, Edit2, AlertTriangle, BarChart3, X, Loader2, RefreshCcw } from "lucide-react";
 import axios from "axios";
 
-// 1. DYNAMIC API URL
-// This automatically switches between your live Render URL and localhost
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-// Define the Task Interface
 interface Task {
   _id: string;
   title: string;
@@ -19,15 +16,13 @@ interface Task {
 }
 
 export default function Dashboard() {
-  // GET USER DATA
   const user = JSON.parse(localStorage.getItem("flowstate_user") || "{}");
   const userEmail = user.email; 
 
-  // STATE
   const [projects, setProjects] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isWakingUp, setIsWakingUp] = useState(false); // New state for slow starts
 
-  // EFFECT
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -37,8 +32,15 @@ export default function Dashboard() {
         setIsLoading(false);
         return;
     }
+    
+    setIsLoading(true);
+    
+    // Set a timer: if data takes > 3 seconds, assume server is waking up
+    const wakeUpTimer = setTimeout(() => {
+      setIsWakingUp(true);
+    }, 3000);
+
     try {
-      // Use Dynamic URL
       const res = await axios.get(`${API_BASE_URL}/api/tasks`, {
         params: { email: userEmail } 
       });
@@ -46,11 +48,33 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Error fetching tasks:", err);
     } finally {
+      clearTimeout(wakeUpTimer);
       setIsLoading(false);
+      setIsWakingUp(false);
     }
   };
 
-  // --- ACTIONS ---
+  // UI STATE & HELPERS (Kept from original)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All Status");
+  const [filterPriority, setFilterPriority] = useState("All Priority");
+  const [filterCategory, setFilterCategory] = useState("All Categories");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formTitle, setFormTitle] = useState("");
+  const [formCategory, setFormCategory] = useState(""); 
+  const [formPriority, setFormPriority] = useState("Medium");
+  const [formDueDate, setFormDueDate] = useState("");
+  const [formStatus, setFormStatus] = useState("To Do");
+  const [formProgress, setFormProgress] = useState(0);
+
+  const getLocalDate = () => {
+    const d = new Date();
+    const offset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - offset).toISOString().split('T')[0];
+  };
+
+  // --- ACTIONS --- (Logic remains the same, updated with API_BASE_URL)
 
   const handleStatusChange = (newStatus: string) => {
     setFormStatus(newStatus);
@@ -81,7 +105,6 @@ export default function Dashboard() {
     setProjects(projects.map(p => p._id === task._id ? updatedTask : p));
 
     try {
-        // Use Dynamic URL
         await axios.put(`${API_BASE_URL}/api/tasks/${task._id}`, updatedTask);
     } catch (err) {
         alert("Failed to update task");
@@ -92,7 +115,6 @@ export default function Dashboard() {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this task?")) {
       try {
-        // Use Dynamic URL
         await axios.delete(`${API_BASE_URL}/api/tasks/${id}`);
         setProjects(projects.filter((p: any) => p._id !== id));
       } catch (err) {
@@ -121,53 +143,19 @@ export default function Dashboard() {
 
     try {
       if (editingId) {
-        // Use Dynamic URL
         const res = await axios.put(`${API_BASE_URL}/api/tasks/${editingId}`, taskData);
         setProjects(projects.map((p: any) => (p._id === editingId ? res.data : p)));
       } else {
-        // Use Dynamic URL
         const res = await axios.post(`${API_BASE_URL}/api/tasks`, taskData);
         setProjects([res.data, ...projects]);
       }
       setIsModalOpen(false);
     } catch (err) {
       alert("Failed to save task. Check server console!");
-      console.error(err);
     }
   };
 
-  // UI STATE & HELPERS
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All Status");
-  const [filterPriority, setFilterPriority] = useState("All Priority");
-  const [filterCategory, setFilterCategory] = useState("All Categories");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  
-  const [formTitle, setFormTitle] = useState("");
-  const [formCategory, setFormCategory] = useState(""); 
-  const [formPriority, setFormPriority] = useState("Medium");
-  const [formDueDate, setFormDueDate] = useState("");
-  const [formStatus, setFormStatus] = useState("To Do");
-  const [formProgress, setFormProgress] = useState(0);
-
-  const getLocalDate = () => {
-    const d = new Date();
-    const offset = d.getTimezoneOffset() * 60000;
-    return new Date(d.getTime() - offset).toISOString().split('T')[0];
-  };
-
-  const openCreateModal = () => {
-    setEditingId(null); setFormTitle(""); setFormCategory(""); setFormPriority("Medium");
-    setFormDueDate(""); setFormStatus("To Do"); setFormProgress(0); setIsModalOpen(true);
-  };
-
-  const openEditModal = (project: any) => {
-    setEditingId(project._id); setFormTitle(project.title); setFormCategory(project.category);
-    setFormPriority(project.priority); setFormDueDate(project.dueDate || "");
-    setFormStatus(project.status); setFormProgress(project.progress); setIsModalOpen(true);
-  };
-
+  // LOGIC & FILTERING
   const totalTasks = projects.length;
   const completedTasks = projects.filter((p: any) => p.status === "Completed").length;
   const completionRate = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
@@ -190,24 +178,38 @@ export default function Dashboard() {
     return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
   });
 
+  const openCreateModal = () => {
+    setEditingId(null); setFormTitle(""); setFormCategory(""); setFormPriority("Medium");
+    setFormDueDate(""); setFormStatus("To Do"); setFormProgress(0); setIsModalOpen(true);
+  };
+
+  const openEditModal = (project: any) => {
+    setEditingId(project._id); setFormTitle(project.title); setFormCategory(project.category);
+    setFormPriority(project.priority); setFormDueDate(project.dueDate || "");
+    setFormStatus(project.status); setFormProgress(project.progress); setIsModalOpen(true);
+  };
+
   return (
     <div className="p-6 md:p-10 space-y-8 pb-20 relative min-h-screen flex flex-col">
+      {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <button onClick={openCreateModal} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-full font-bold transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
           <Plus size={18} /> New Task
         </button>
       </div>
 
+      {/* STAT CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard title="Total Tasks" value={totalTasks} icon={<Circle size={20} className="text-indigo-400" />} color="bg-indigo-400/10 border-indigo-400/20 text-indigo-400" />
         <StatCard title="Completed" value={completedTasks} icon={<CheckCircle2 size={20} className="text-emerald-400" />} color="bg-emerald-400/10 border-emerald-400/20 text-emerald-400" />
         <StatCard title="Completion Rate" value={`${completionRate}%`} icon={<BarChart3 size={20} className="text-amber-400" />} color="bg-amber-400/10 border-amber-400/20 text-amber-400" />
       </div>
 
+      {/* SEARCH & FILTERS */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
-          <input type="text" placeholder="Search projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:bg-black transition-all" />
+          <input type="text" placeholder="Search tasks..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:bg-black transition-all" />
         </div>
         <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="bg-black/50 border border-white/10 text-slate-300 rounded-2xl px-4 py-3 focus:outline-none focus:border-indigo-500 cursor-pointer hover:bg-white/5">
           {uniqueCategories.map((cat: any) => <option key={cat} value={cat} className="bg-black text-white">{cat}</option>)}
@@ -226,9 +228,21 @@ export default function Dashboard() {
         </select>
       </div>
 
+      {/* TASK CONTENT SECTION */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-20 text-slate-500 animate-pulse">
-          Connecting to database...
+        <div className="flex flex-col items-center justify-center py-24 text-slate-400 text-center">
+          <Loader2 className="animate-spin text-indigo-500 mb-4" size={40} />
+          <h3 className="text-xl font-bold text-white mb-2">Connecting to FlowState</h3>
+          <p className="max-w-xs mx-auto text-sm">
+            {isWakingUp 
+              ? "The server is currently waking up from hibernation. This can take about 30-60 seconds on the free tier." 
+              : "Fetching your personalized dashboard..."}
+          </p>
+          {isWakingUp && (
+            <button onClick={fetchTasks} className="mt-6 flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-bold">
+              <RefreshCcw size={16} /> Try Refreshing
+            </button>
+          )}
         </div>
       ) : filteredProjects.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -277,9 +291,10 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* MODAL SECTION (Kept from original) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl w-full max-w-lg p-8 shadow-2xl relative animate-float">
+          <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl w-full max-w-lg p-8 shadow-2xl relative">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors"><X size={24} /></button>
             <h2 className="text-2xl font-bold text-white mb-6">{editingId ? "Edit Task" : "Create New Task"}</h2>
             <form onSubmit={handleSaveProject} className="space-y-5">
