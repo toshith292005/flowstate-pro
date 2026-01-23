@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 
+// 1. DYNAMIC API URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 export default function Signup() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -17,20 +20,20 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      // 1. Send data to your new Backend API
-      const res = await axios.post("http://localhost:5000/api/auth/register", {
+      // UPDATED: Use dynamic URL for registration
+      const res = await axios.post(`${API_BASE_URL}/api/auth/register`, {
         name,
         email,
         password
       });
 
-      // 2. Save the "Digital ID Card" (Token) the server gave us
       localStorage.setItem("flowstate_token", res.data.token);
       localStorage.setItem("flowstate_user", JSON.stringify(res.data.user));
 
-      // 3. Go to Dashboard
+      // Broadcast event so Navbar updates immediately
+      window.dispatchEvent(new Event("userUpdated"));
+
       navigate("/dashboard");
-      window.location.reload(); // Refresh to update the Navbar
     } catch (err: any) {
       setError(err.response?.data?.message || "Signup failed. Try again.");
     } finally {
@@ -39,9 +42,9 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-6 relative bg-grid overflow-hidden">
+    <div className="min-h-screen font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-6 relative bg-grid overflow-hidden bg-black">
       
-      {/* Background Blob */}
+      {/* Background Blobs */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
          <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px]"></div>
          <div className="absolute top-[40%] right-[0%] w-[40%] h-[40%] rounded-full bg-violet-900/20 blur-[120px]"></div>

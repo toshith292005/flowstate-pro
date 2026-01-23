@@ -6,6 +6,9 @@ import {
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, CheckCircle2 } from "lucide-react";
 import axios from "axios";
 
+// 1. DYNAMIC API URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 export default function Calendar() {
   // 1. STATE
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -13,22 +16,20 @@ export default function Calendar() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
 
-  // 2. LOAD DATA FROM BACKEND (PRIVACY FIX APPLIED)
+  // 2. LOAD DATA FROM BACKEND (PRIVACY FIX + DYNAMIC URL APPLIED)
   useEffect(() => {
-    // A. Get User Email
     const user = JSON.parse(localStorage.getItem("flowstate_user") || "{}");
     const userEmail = user.email;
 
     const fetchTasks = async () => {
-      // B. Safety Check
       if (!userEmail) {
         setIsLoading(false);
         return;
       }
 
       try {
-        // C. Send Email to Server
-        const res = await axios.get("http://localhost:5000/api/tasks", {
+        // Updated to use Dynamic API URL
+        const res = await axios.get(`${API_BASE_URL}/api/tasks`, {
             params: { email: userEmail }
         });
         setProjects(res.data);

@@ -3,11 +3,14 @@ import { User, Bell, Shield, Trash2, LogOut, Edit2, Check, X, Link as LinkIcon, 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+// 1. DYNAMIC API URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 export default function Settings() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // 1. PROFILE STATE
+  // PROFILE STATE
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("flowstate_user");
     return saved ? JSON.parse(saved) : { 
@@ -18,12 +21,10 @@ export default function Settings() {
   });
 
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Temp state for editing
   const [tempName, setTempName] = useState(user.name);
   const [tempPhoto, setTempPhoto] = useState(user.photo);
 
-  // 2. SETTINGS STATE
+  // SETTINGS STATE
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem("flowstate_settings");
     return saved ? JSON.parse(saved) : { 
@@ -32,12 +33,13 @@ export default function Settings() {
     };
   });
 
-  // 3. AUTO-SAVE SETTINGS
+  // AUTO-SAVE SETTINGS
   useEffect(() => {
     localStorage.setItem("flowstate_settings", JSON.stringify(settings));
   }, [settings]);
 
-  // 4. HANDLERS
+  // --- HANDLERS ---
+
   const handleSaveProfile = async () => {
     if (!tempName.trim()) return;
     setLoading(true);
@@ -45,7 +47,8 @@ export default function Settings() {
     try {
       const storedUser = JSON.parse(localStorage.getItem("flowstate_user") || "{}");
       
-      const res = await axios.put("http://localhost:5000/api/auth/profile", {
+      // UPDATED: Use dynamic URL
+      const res = await axios.put(`${API_BASE_URL}/api/auth/profile`, {
         id: storedUser.id || storedUser._id, 
         name: tempName,
         email: user.email, 
@@ -57,13 +60,32 @@ export default function Settings() {
       localStorage.setItem("flowstate_user", JSON.stringify(updatedUser));
       
       window.dispatchEvent(new Event("userUpdated")); 
-      
       setIsEditing(false);
     } catch (err) {
-      alert("Failed to save profile. Make sure server is running!");
+      alert("Failed to save profile. Check your internet connection.");
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetData = async () => {
+    if (!user.email) return;
+
+    if (confirm("⚠️ ARE YOU SURE? \n\nThis will PERMANENTLY delete all your tasks from the database. This action cannot be undone.")) {
+      try {
+        // UPDATED: Use dynamic URL for deleting tasks
+        await axios.delete(`${API_BASE_URL}/api/tasks`, {
+          params: { email: user.email }
+        });
+
+        localStorage.clear();
+        window.location.href = "/login";
+        
+      } catch (err) {
+        alert("Failed to delete data. Check server connection.");
+        console.error(err);
+      }
     }
   };
 
@@ -83,31 +105,6 @@ export default function Settings() {
     setSettings((prev: any) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // --- UPDATED RESET LOGIC START ---
-  const handleResetData = async () => {
-    if (!user.email) return;
-
-    if (confirm("⚠️ ARE YOU SURE? \n\nThis will PERMANENTLY delete all your tasks from the database. This action cannot be undone.")) {
-      try {
-        // 1. Call Backend to delete tasks
-        await axios.delete(`http://localhost:5000/api/tasks`, {
-          params: { email: user.email }
-        });
-
-        // 2. Clear Local Storage
-        localStorage.clear();
-        
-        // 3. Redirect to Login
-        window.location.href = "/login";
-        
-      } catch (err) {
-        alert("Failed to delete data. Check server connection.");
-        console.error(err);
-      }
-    }
-  };
-  // --- UPDATED RESET LOGIC END ---
-
   const handleLogout = () => {
     localStorage.removeItem("flowstate_token");
     localStorage.removeItem("flowstate_user");
@@ -121,13 +118,13 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto pb-20 space-y-8">
+    <div className="p-6 md:p-10 max-w-4xl mx-auto pb-20 space-y-8 bg-black">
       
       <div>
         <h1 className="text-3xl font-bold text-white tracking-tight">Settings</h1>
       </div>
 
-      {/* FEATURE 1: ACCOUNT & PHOTO */}
+      {/* ACCOUNT & PHOTO */}
       <section className="bg-black border border-white/10 rounded-3xl p-6 md:p-8 relative overflow-hidden transition-all duration-300">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32"></div>
 
@@ -151,8 +148,6 @@ export default function Settings() {
         
         <div className="flex flex-col md:flex-row items-center gap-6 mb-8 relative z-10">
           <div className="relative group">
-            
-            {/* Profile Picture Circle */}
             <div className="h-24 w-24 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-bold border-4 border-black shadow-xl overflow-hidden relative">
               {(isEditing ? tempPhoto : user.photo) ? (
                 <img src={(isEditing ? tempPhoto : user.photo) as string} alt="Profile" className="w-full h-full object-cover" />
@@ -198,7 +193,7 @@ export default function Settings() {
         </div>
       </section>
 
-      {/* FEATURE 2: NOTIFICATIONS */}
+      {/* NOTIFICATIONS */}
       <section className="bg-black border border-white/10 rounded-3xl p-6 md:p-8">
         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
           <Bell size={20} className="text-indigo-400" /> Notifications
@@ -225,7 +220,7 @@ export default function Settings() {
         </div>
       </section>
 
-      {/* FEATURE 3: DANGER ZONE */}
+      {/* DANGER ZONE */}
       <section className="border border-red-500/20 bg-red-500/5 rounded-3xl p-6 md:p-8">
         <h2 className="text-xl font-bold text-red-500 mb-6 flex items-center gap-2">
           <Shield size={20} /> Danger Zone

@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, ArrowRight, ArrowLeft, AlertCircle } from "lucide-react"; // Added AlertCircle
+import { Mail, Lock, ArrowRight, ArrowLeft, AlertCircle } from "lucide-react";
 import axios from "axios";
+
+// 1. DYNAMIC API URL
+// This automatically switches between your live Render URL and localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,7 +20,8 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
+      // UPDATED: Use dynamic URL with API_BASE_URL
+      const res = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         email,
         password
       });
@@ -24,22 +29,23 @@ export default function Login() {
       localStorage.setItem("flowstate_token", res.data.token);
       localStorage.setItem("flowstate_user", JSON.stringify(res.data.user));
 
+      // Broadcast event so Navbar updates immediately
+      window.dispatchEvent(new Event("userUpdated"));
+      
       navigate("/dashboard");
-      window.location.reload(); 
     } catch (err: any) {
-      setError("Invalid email or password");
+      setError(err.response?.data?.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
   };
 
-  // HELPER: Temporary alert for unfinished features
   const handleFeatureComingSoon = () => {
     alert("🚀 Feature Coming Soon!\n\nWe are currently focusing on Email/Password login. Google Login & Password Reset will be added in Phase 4.");
   };
 
   return (
-    <div className="min-h-screen font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-6 relative bg-grid overflow-hidden">
+    <div className="min-h-screen font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-6 relative bg-grid overflow-hidden bg-black">
       
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
          <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px]"></div>
@@ -53,7 +59,6 @@ export default function Login() {
           <p className="text-slate-400">Sign in to continue to FlowState</p>
         </div>
 
-        {/* GOOGLE LOGIN BUTTON (Now clickable but shows alert) */}
         <button 
           type="button"
           onClick={handleFeatureComingSoon}
@@ -90,7 +95,6 @@ export default function Login() {
           <div className="space-y-2">
             <div className="flex justify-between items-center ml-1">
                <label className="text-sm font-semibold text-slate-300">Password</label>
-               {/* FORGOT PASSWORD BUTTON (Now clickable but shows alert) */}
                <button type="button" onClick={handleFeatureComingSoon} className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium">Forgot password?</button>
             </div>
             <div className="relative group">

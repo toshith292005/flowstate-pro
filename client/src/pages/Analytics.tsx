@@ -6,9 +6,12 @@ import { CheckCircle2, Circle, Clock, Activity } from "lucide-react";
 import { useEffect, useState, useMemo } from 'react';
 import axios from "axios";
 
+// 1. DYNAMIC API URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 export default function Analytics() {
   
-  // 1. STATE: Load Real Data from API
+  // STATE: Load Real Data from API
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,8 +28,8 @@ export default function Analytics() {
       }
 
       try {
-        // Send email in query params
-        const res = await axios.get("http://localhost:5000/api/tasks", {
+        // UPDATED: Use Dynamic API URL
+        const res = await axios.get(`${API_BASE_URL}/api/tasks`, {
             params: { email: userEmail }
         });
         setProjects(res.data);
@@ -43,13 +46,11 @@ export default function Analytics() {
   const trendData = useMemo(() => {
     const days = [];
     
-    // Helper 1: Generate "YYYY-MM-DD" in LOCAL TIME
     const getLocalYYYYMMDD = (d: Date) => {
       const offset = d.getTimezoneOffset() * 60000;
       return new Date(d.getTime() - offset).toISOString().split('T')[0];
     };
 
-    // Helper 2: Check if ISO Timestamp (UTC) falls on this Local Day
     const isSameCalendarDay = (localDate: Date, isoString: string) => {
         if (!isoString) return false;
         const targetDate = new Date(isoString); 
@@ -65,21 +66,14 @@ export default function Analytics() {
       const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const localDateStr = getLocalYYYYMMDD(d); 
 
-      // A. Count Created
       const createdCount = projects.filter((p: any) => 
         isSameCalendarDay(d, p.createdAt)
       ).length;
 
-      // B. Count Completed
       const completedCount = projects.filter((p: any) => {
         if (p.status !== "Completed") return false;
-
-        // Plan A: Explicit String Match
         if (p.completedAt === localDateStr) return true;
-
-        // Plan B: ISO Match (Fallback)
         if (!p.completedAt && isSameCalendarDay(d, p.updatedAt)) return true;
-
         return false;
       }).length;
 
@@ -121,7 +115,6 @@ export default function Analytics() {
 
   return (
     <div className="p-6 md:p-10 space-y-8 pb-20">
-      
       <div>
         <h1 className="text-3xl font-bold text-white tracking-tight">Analytics & Insights</h1>
       </div>
@@ -134,13 +127,10 @@ export default function Analytics() {
         <StatCard title="Completion Rate" value={`${completionRate}%`} icon={<Activity size={20} className="text-rose-400" />} borderColor="border-rose-500/20" />
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Chart 1: Task Trends */}
+        {/* Task Trends Chart */}
         <div className="p-6 rounded-3xl bg-black border border-white/10 flex flex-col h-[450px]">
           <h3 className="text-lg font-bold text-white mb-6">Task Activity (Last 30 Days)</h3>
-          
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trendData}>
@@ -166,7 +156,6 @@ export default function Analytics() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-
           <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-white/5">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
@@ -179,10 +168,9 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Chart 2: Priority Distribution */}
+        {/* Priority Distribution Chart */}
         <div className="p-6 rounded-3xl bg-black border border-white/10 flex flex-col h-[450px]">
           <h3 className="text-lg font-bold text-white mb-2">Priority Distribution</h3>
-          
           <div className="flex flex-1 items-center">
             <div className="relative flex-1 h-full">
                <ResponsiveContainer width="100%" height="100%">

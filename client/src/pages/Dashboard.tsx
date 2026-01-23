@@ -2,6 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import { Plus, CheckCircle2, Circle, Search, Calendar, Trash2, Edit2, AlertTriangle, BarChart3, X } from "lucide-react";
 import axios from "axios";
 
+// 1. DYNAMIC API URL
+// This automatically switches between your live Render URL and localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 // Define the Task Interface
 interface Task {
   _id: string;
@@ -15,15 +19,15 @@ interface Task {
 }
 
 export default function Dashboard() {
-  // 1. GET USER DATA
+  // GET USER DATA
   const user = JSON.parse(localStorage.getItem("flowstate_user") || "{}");
   const userEmail = user.email; 
 
-  // 2. STATE
+  // STATE
   const [projects, setProjects] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 3. EFFECT
+  // EFFECT
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -34,7 +38,8 @@ export default function Dashboard() {
         return;
     }
     try {
-      const res = await axios.get("http://localhost:5000/api/tasks", {
+      // Use Dynamic URL
+      const res = await axios.get(`${API_BASE_URL}/api/tasks`, {
         params: { email: userEmail } 
       });
       setProjects(res.data);
@@ -43,29 +48,6 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // 4. UI STATE
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All Status");
-  const [filterPriority, setFilterPriority] = useState("All Priority");
-  const [filterCategory, setFilterCategory] = useState("All Categories");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  
-  // 5. FORM STATE
-  const [formTitle, setFormTitle] = useState("");
-  const [formCategory, setFormCategory] = useState(""); 
-  const [formPriority, setFormPriority] = useState("Medium");
-  const [formDueDate, setFormDueDate] = useState("");
-  const [formStatus, setFormStatus] = useState("To Do");
-  const [formProgress, setFormProgress] = useState(0);
-
-  // 6. HELPER
-  const getLocalDate = () => {
-    const d = new Date();
-    const offset = d.getTimezoneOffset() * 60000;
-    return new Date(d.getTime() - offset).toISOString().split('T')[0];
   };
 
   // --- ACTIONS ---
@@ -89,53 +71,29 @@ export default function Dashboard() {
     else setFormStatus("In Progress");
   };
 
-  // NEW: Quick Toggle Complete Logic
   const handleToggleComplete = async (task: Task) => {
     const isComplete = task.status === "Completed";
-    
-    // Toggle Logic: If Complete -> Go to To Do. If Not Complete -> Go to Completed.
     const newStatus = isComplete ? "To Do" : "Completed";
     const newProgress = isComplete ? 0 : 100;
     const completedAt = isComplete ? null : getLocalDate();
 
-    // Optimistic UI Update (Makes it feel instant)
     const updatedTask = { ...task, status: newStatus, progress: newProgress, completedAt };
     setProjects(projects.map(p => p._id === task._id ? updatedTask : p));
 
     try {
-        await axios.put(`http://localhost:5000/api/tasks/${task._id}`, updatedTask);
+        // Use Dynamic URL
+        await axios.put(`${API_BASE_URL}/api/tasks/${task._id}`, updatedTask);
     } catch (err) {
         alert("Failed to update task");
-        fetchTasks(); // Revert on error
+        fetchTasks(); 
     }
-  };
-
-  const openCreateModal = () => {
-    setEditingId(null);
-    setFormTitle("");
-    setFormCategory("");
-    setFormPriority("Medium");
-    setFormDueDate("");
-    setFormStatus("To Do");
-    setFormProgress(0);
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (project: any) => {
-    setEditingId(project._id);
-    setFormTitle(project.title);
-    setFormCategory(project.category);
-    setFormPriority(project.priority);
-    setFormDueDate(project.dueDate || "");
-    setFormStatus(project.status);
-    setFormProgress(project.progress);
-    setIsModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this task?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/tasks/${id}`);
+        // Use Dynamic URL
+        await axios.delete(`${API_BASE_URL}/api/tasks/${id}`);
         setProjects(projects.filter((p: any) => p._id !== id));
       } catch (err) {
         alert("Failed to delete task");
@@ -163,10 +121,12 @@ export default function Dashboard() {
 
     try {
       if (editingId) {
-        const res = await axios.put(`http://localhost:5000/api/tasks/${editingId}`, taskData);
+        // Use Dynamic URL
+        const res = await axios.put(`${API_BASE_URL}/api/tasks/${editingId}`, taskData);
         setProjects(projects.map((p: any) => (p._id === editingId ? res.data : p)));
       } else {
-        const res = await axios.post("http://localhost:5000/api/tasks", taskData);
+        // Use Dynamic URL
+        const res = await axios.post(`${API_BASE_URL}/api/tasks`, taskData);
         setProjects([res.data, ...projects]);
       }
       setIsModalOpen(false);
@@ -176,7 +136,38 @@ export default function Dashboard() {
     }
   };
 
-  // 8. FILTERS & STATS
+  // UI STATE & HELPERS
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All Status");
+  const [filterPriority, setFilterPriority] = useState("All Priority");
+  const [filterCategory, setFilterCategory] = useState("All Categories");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
+  const [formTitle, setFormTitle] = useState("");
+  const [formCategory, setFormCategory] = useState(""); 
+  const [formPriority, setFormPriority] = useState("Medium");
+  const [formDueDate, setFormDueDate] = useState("");
+  const [formStatus, setFormStatus] = useState("To Do");
+  const [formProgress, setFormProgress] = useState(0);
+
+  const getLocalDate = () => {
+    const d = new Date();
+    const offset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - offset).toISOString().split('T')[0];
+  };
+
+  const openCreateModal = () => {
+    setEditingId(null); setFormTitle(""); setFormCategory(""); setFormPriority("Medium");
+    setFormDueDate(""); setFormStatus("To Do"); setFormProgress(0); setIsModalOpen(true);
+  };
+
+  const openEditModal = (project: any) => {
+    setEditingId(project._id); setFormTitle(project.title); setFormCategory(project.category);
+    setFormPriority(project.priority); setFormDueDate(project.dueDate || "");
+    setFormStatus(project.status); setFormProgress(project.progress); setIsModalOpen(true);
+  };
+
   const totalTasks = projects.length;
   const completedTasks = projects.filter((p: any) => p.status === "Completed").length;
   const completionRate = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
@@ -250,8 +241,6 @@ export default function Dashboard() {
                   <div className="flex justify-between items-start">
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/5 text-slate-300 border border-white/5">{project.category}</span>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      
-                      {/* --- NEW BUTTON: QUICK COMPLETE --- */}
                       <button 
                         onClick={() => handleToggleComplete(project)} 
                         title={project.status === "Completed" ? "Mark as To Do" : "Mark as Completed"}
@@ -259,7 +248,6 @@ export default function Dashboard() {
                       >
                          <CheckCircle2 size={16} />
                       </button>
-                      
                       <button onClick={() => openEditModal(project)} className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-white/10 rounded-lg transition-colors"><Edit2 size={16} /></button>
                       <button onClick={() => handleDelete(project._id)} className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors"><Trash2 size={16} /></button>
                     </div>
@@ -289,7 +277,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Modal - Same as before */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl w-full max-w-lg p-8 shadow-2xl relative animate-float">
@@ -301,12 +288,10 @@ export default function Dashboard() {
                 <div className="space-y-2"><label className="text-sm font-semibold text-slate-300">Category</label><input type="text" value={formCategory} onChange={(e) => setFormCategory(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all" placeholder="e.g. Work" /></div>
                 <div className="space-y-2"><label className="text-sm font-semibold text-slate-300">Priority</label><select value={formPriority} onChange={(e) => setFormPriority(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 appearance-none"><option className="bg-black">Low</option><option className="bg-black">Medium</option><option className="bg-black">High</option></select></div>
               </div>
-              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><label className="text-sm font-semibold text-slate-300">Status</label><select value={formStatus} onChange={(e) => handleStatusChange(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 appearance-none"><option className="bg-black">To Do</option><option className="bg-black">In Progress</option><option className="bg-black">Completed</option></select></div>
                 <div className="space-y-2"><label className="text-sm font-semibold text-slate-300">Progress (%)</label><input type="number" min="0" max="100" value={formProgress} onChange={handleProgressChange} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500" /></div>
               </div>
-
               <div className="space-y-2"><label className="text-sm font-semibold text-slate-300">Due Date</label><input type="date" value={formDueDate} onChange={(e) => setFormDueDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all [color-scheme:dark]" /></div>
               <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-500/25 active:scale-95 mt-2">{editingId ? "Save Changes" : "Create Task"}</button>
             </form>
