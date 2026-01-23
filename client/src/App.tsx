@@ -1,57 +1,50 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup"; 
-import Dashboard from "./pages/Dashboard";
-import Analytics from "./pages/Analytics";
-import Calendar from "./pages/Calendar"; 
-import Settings from "./pages/Settings";
-import Navbar from "./components/Navbar";
-import ProtectedRoute from "./components/ProtectedRoute"; // <--- 1. IMPORT THE BOUNCER
+import { Loader2 } from "lucide-react";
 
-// Simple Layout Wrapper
+// 1. CRITICAL COMPONENTS (Load immediately)
+import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+// 2. LAZY LOAD PAGES (Performance Optimization)
+// This splits your bundle so the initial load is much faster on mobile networks.
+const Landing = lazy(() => import("./pages/Landing"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Calendar = lazy(() => import("./pages/Calendar"));
+const Settings = lazy(() => import("./pages/Settings"));
+
+// 3. LOADING SCREEN
+// Shows while the lazy pages are being fetched
+function LoadingScreen() {
+  return (
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-black text-white">
+      <Loader2 className="animate-spin text-indigo-500 mb-4" size={40} />
+      <p className="text-slate-400 text-sm font-medium animate-pulse">Loading FlowState...</p>
+    </div>
+  );
+}
+
+// 4. MAIN LAYOUT WRAPPER
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen w-full font-sans text-white bg-black bg-grid">
+    // OPTIMIZATION: min-h-[100dvh] fixes mobile browser address bar issues
+    <div className="min-h-[100dvh] w-full font-sans text-white bg-black selection:bg-indigo-500 selection:text-white">
       {children}
     </div>
   );
 }
 
-// Layouts for specific pages
-function DashboardLayout() {
+// 5. AUTHENTICATED LAYOUT (Reduces repetition)
+// Wraps pages that need the Navbar
+function AuthenticatedPage({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <Navbar />
-      <Dashboard />
-    </>
-  );
-}
-
-function AnalyticsLayout() {
-  return (
-    <>
-      <Navbar />
-      <Analytics />
-    </>
-  );
-}
-
-function CalendarLayout() {
-  return (
-    <>
-      <Navbar />
-      <Calendar />
-    </>
-  );
-}
-
-function SettingsLayout() {
-  return (
-    <>
-      <Navbar />
-      <Settings />
-    </>
+    <ProtectedRoute>
+      <Navbar /> {/* Handles both Desktop Top-bar and Mobile Bottom-bar */}
+      {children}
+    </ProtectedRoute>
   );
 }
 
@@ -59,54 +52,55 @@ function App() {
   return (
     <BrowserRouter>
       <MainLayout>
-        <Routes>
-          {/* Public Routes (Anyone can see these) */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          
-          {/* PROTECTED ROUTES (The Bouncer guards these!) 
-              If you aren't logged in, you can't see them.
-          */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <DashboardLayout />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/analytics" 
-            element={
-              <ProtectedRoute>
-                <AnalyticsLayout />
-              </ProtectedRoute>
-            } 
-          />
+        {/* Suspense catches the lazy loading state */}
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
+            {/* --- PUBLIC ROUTES --- */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            
+            {/* --- PROTECTED ROUTES --- */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <AuthenticatedPage>
+                  <Dashboard />
+                </AuthenticatedPage>
+              } 
+            />
+            
+            <Route 
+              path="/analytics" 
+              element={
+                <AuthenticatedPage>
+                  <Analytics />
+                </AuthenticatedPage>
+              } 
+            />
 
-          <Route 
-            path="/calendar" 
-            element={
-              <ProtectedRoute>
-                <CalendarLayout />
-              </ProtectedRoute>
-            } 
-          />
+            <Route 
+              path="/calendar" 
+              element={
+                <AuthenticatedPage>
+                  <Calendar />
+                </AuthenticatedPage>
+              } 
+            />
 
-          <Route 
-            path="/settings" 
-            element={
-              <ProtectedRoute>
-                <SettingsLayout />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route 
+              path="/settings" 
+              element={
+                <AuthenticatedPage>
+                  <Settings />
+                </AuthenticatedPage>
+              } 
+            />
+            
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </MainLayout>
     </BrowserRouter>
   );

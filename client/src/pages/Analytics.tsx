@@ -2,13 +2,15 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Tooltip as PieTooltip 
 } from 'recharts';
-import { CheckCircle2, Circle, Clock, Activity } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Activity, ChevronLeft } from "lucide-react";
 import { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Analytics() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -89,117 +91,141 @@ export default function Analytics() {
   const activeTypes = priorityCounts.filter(p => p.value > 0 && p.name !== 'No Tasks').length;
 
   if (isLoading) {
-    return <div className="p-10 text-center text-slate-500 animate-pulse">Calculating Insights...</div>;
+    return (
+        <div className="min-h-screen bg-black flex items-center justify-center">
+            <div className="text-slate-500 animate-pulse font-medium">Calculating Insights...</div>
+        </div>
+    );
   }
 
   return (
-    <div className="p-4 md:p-10 space-y-6 md:space-y-8 pb-24">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Analytics & Insights</h1>
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
+      
+      {/* 1. BACKGROUND AMBIENCE */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+         <div className="absolute top-[-10%] left-[20%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px]"></div>
+         <div className="absolute bottom-[10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-900/10 blur-[120px]"></div>
+         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
       </div>
 
-      {/* KPI Cards - Optimized Grid for Mobile (1 col) to Desktop (4 cols) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <StatCard title="Total Tasks" value={totalTasks} icon={<Circle size={20} className="text-indigo-400" />} borderColor="border-indigo-500/20" />
-        <StatCard title="Completed" value={completedTasks} icon={<CheckCircle2 size={20} className="text-emerald-400" />} borderColor="border-emerald-500/20" />
-        <StatCard title="Pending" value={pendingTasks} icon={<Clock size={20} className="text-amber-400" />} borderColor="border-amber-500/20" />
-        <StatCard title="Completion Rate" value={`${completionRate}%`} icon={<Activity size={20} className="text-rose-400" />} borderColor="border-rose-500/20" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-        {/* Task Trends Chart - Adjusted Height for Mobile */}
-        <div className="p-4 md:p-6 rounded-3xl bg-black border border-white/10 flex flex-col h-[350px] md:h-[450px]">
-          <h3 className="text-base md:text-lg font-bold text-white mb-4 md:mb-6">Task Activity (Last 30 Days)</h3>
-          <div className="flex-1 w-full min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="#64748b" 
-                  fontSize={10} 
-                  tickLine={false} 
-                  axisLine={false} 
-                  dy={10} 
-                  minTickGap={20} // Adjusted for mobile overlap
-                />
-                <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} width={25} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#0A0A0A', borderColor: '#333', borderRadius: '12px', color: '#fff', fontSize: '12px' }} 
-                  itemStyle={{ color: '#fff' }}
-                />
-                <Area type="monotone" dataKey="created" name="Created" stroke="#6366f1" fillOpacity={1} fill="url(#colorCreated)" strokeWidth={3} />
-                <Area type="monotone" dataKey="completed" name="Completed" stroke="#10b981" fillOpacity={1} fill="url(#colorCompleted)" strokeWidth={3} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex items-center justify-center gap-4 md:gap-6 mt-4 pt-4 border-t border-white/5">
-            <div className="flex items-center gap-2">
-              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-              <span className="text-xs md:text-sm font-medium text-slate-300">Completed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-              <span className="text-xs md:text-sm font-medium text-slate-300">Created</span>
-            </div>
-          </div>
+      <div className="relative z-10 p-4 md:p-10 space-y-6 md:space-y-8 pb-24 max-w-7xl mx-auto">
+        
+        {/* HEADER WITH BACK BUTTON */}
+        <div className="flex items-center gap-3 md:gap-4">
+            <button 
+                onClick={() => navigate(-1)} 
+                className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl transition-colors active:scale-95 text-slate-300 hover:text-white"
+            >
+                <ChevronLeft size={20} />
+            </button>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Analytics & Insights</h1>
         </div>
 
-        {/* Priority Distribution Chart - Vertical on Mobile */}
-        <div className="p-4 md:p-6 rounded-3xl bg-black border border-white/10 flex flex-col h-[400px] md:h-[450px]">
-          <h3 className="text-base md:text-lg font-bold text-white mb-2">Priority Distribution</h3>
-          <div className="flex flex-col sm:flex-row flex-1 items-center">
-            <div className="relative w-full sm:flex-1 h-[250px] md:h-full">
-               <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={priorityCounts}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={window.innerWidth < 768 ? 60 : 80}
-                      outerRadius={window.innerWidth < 768 ? 90 : 110}
-                      paddingAngle={activeTypes > 1 ? 5 : 0} 
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {priorityCounts.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <PieTooltip 
-                      contentStyle={{ backgroundColor: '#0A0A0A', borderColor: '#333', borderRadius: '12px' }} 
-                      itemStyle={{ color: '#fff' }}
-                      cursor={false}
-                    />
-                  </PieChart>
-               </ResponsiveContainer>
-               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                 <div className="text-center"> 
-                   <span className="text-2xl md:text-4xl font-black text-white block drop-shadow-lg">{totalTasks}</span>
-                   <span className="text-[10px] md:text-xs text-slate-400 uppercase tracking-wider font-bold">Total</span>
-                 </div>
-               </div>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <StatCard title="Total Tasks" value={totalTasks} icon={<Circle size={20} className="text-indigo-400" />} borderColor="border-indigo-500/20" />
+          <StatCard title="Completed" value={completedTasks} icon={<CheckCircle2 size={20} className="text-emerald-400" />} borderColor="border-emerald-500/20" />
+          <StatCard title="Pending" value={pendingTasks} icon={<Clock size={20} className="text-amber-400" />} borderColor="border-amber-500/20" />
+          <StatCard title="Completion Rate" value={`${completionRate}%`} icon={<Activity size={20} className="text-rose-400" />} borderColor="border-rose-500/20" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+          {/* Task Trends Chart */}
+          <div className="p-4 md:p-6 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 flex flex-col h-[350px] md:h-[450px]">
+            <h3 className="text-base md:text-lg font-bold text-white mb-4 md:mb-6">Task Activity (Last 30 Days)</h3>
+            <div className="flex-1 w-full min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendData}>
+                  <defs>
+                    <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#64748b" 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    dy={10} 
+                    minTickGap={30} // OPTIMIZATION: Prevents overlapping labels on mobile
+                  />
+                  <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} width={25} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#0A0A0A', borderColor: '#333', borderRadius: '12px', color: '#fff', fontSize: '12px' }} 
+                    itemStyle={{ color: '#fff' }}
+                  />
+                  <Area type="monotone" dataKey="created" name="Created" stroke="#6366f1" fillOpacity={1} fill="url(#colorCreated)" strokeWidth={3} />
+                  <Area type="monotone" dataKey="completed" name="Completed" stroke="#10b981" fillOpacity={1} fill="url(#colorCompleted)" strokeWidth={3} />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-            <div className="w-full sm:w-1/3 flex flex-row sm:flex-col justify-center items-center sm:items-start gap-4 sm:gap-4 sm:pl-4 mt-4 sm:mt-0">
-              {priorityCounts.map((item) => (
-                <div key={item.name} className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-2 md:w-3 h-2 md:h-3 rounded-full shadow-[0_0_8px]" style={{ backgroundColor: item.color, boxShadow: `0 0 8px ${item.color}` }}></div>
-                  <div className="text-left">
-                    <p className="text-xs md:text-sm font-bold text-white">{item.name}</p>
-                    <p className="text-[10px] md:text-xs text-slate-500">{item.value}</p>
+            <div className="flex items-center justify-center gap-4 md:gap-6 mt-4 pt-4 border-t border-white/5">
+              <div className="flex items-center gap-2">
+                <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                <span className="text-xs md:text-sm font-medium text-slate-300">Completed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+                <span className="text-xs md:text-sm font-medium text-slate-300">Created</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Priority Distribution Chart */}
+          <div className="p-4 md:p-6 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 flex flex-col h-[400px] md:h-[450px]">
+            <h3 className="text-base md:text-lg font-bold text-white mb-2">Priority Distribution</h3>
+            <div className="flex flex-col sm:flex-row flex-1 items-center">
+              <div className="relative w-full sm:flex-1 h-[250px] md:h-full">
+                 <ResponsiveContainer width="100%" height="100%">
+                   <PieChart>
+                     <Pie
+                       data={priorityCounts}
+                       cx="50%"
+                       cy="50%"
+                       innerRadius={window.innerWidth < 768 ? 60 : 80}
+                       outerRadius={window.innerWidth < 768 ? 90 : 110}
+                       paddingAngle={activeTypes > 1 ? 5 : 0} 
+                       dataKey="value"
+                       stroke="none"
+                     >
+                       {priorityCounts.map((entry, index) => (
+                         <Cell key={`cell-${index}`} fill={entry.color} />
+                       ))}
+                     </Pie>
+                     <PieTooltip 
+                       contentStyle={{ backgroundColor: '#0A0A0A', borderColor: '#333', borderRadius: '12px' }} 
+                       itemStyle={{ color: '#fff' }}
+                       cursor={false}
+                     />
+                   </PieChart>
+                 </ResponsiveContainer>
+                 {/* Center Label */}
+                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                   <div className="text-center"> 
+                     <span className="text-2xl md:text-4xl font-black text-white block drop-shadow-lg">{totalTasks}</span>
+                     <span className="text-[10px] md:text-xs text-slate-400 uppercase tracking-wider font-bold">Total</span>
+                   </div>
+                 </div>
+              </div>
+              {/* Legend */}
+              <div className="w-full sm:w-1/3 flex flex-row sm:flex-col justify-center items-center sm:items-start gap-4 sm:gap-4 sm:pl-4 mt-4 sm:mt-0">
+                {priorityCounts.map((item) => (
+                  <div key={item.name} className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-2 md:w-3 h-2 md:h-3 rounded-full shadow-[0_0_8px]" style={{ backgroundColor: item.color, boxShadow: `0 0 8px ${item.color}` }}></div>
+                    <div className="text-left">
+                      <p className="text-xs md:text-sm font-bold text-white">{item.name}</p>
+                      <p className="text-[10px] md:text-xs text-slate-500">{item.value}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -210,7 +236,7 @@ export default function Analytics() {
 
 function StatCard({ title, value, icon, borderColor }: any) {
   return (
-    <div className={`p-4 md:p-6 rounded-3xl bg-black border ${borderColor} hover:bg-white/5 transition-colors group`}>
+    <div className={`p-4 md:p-6 rounded-3xl bg-white/5 backdrop-blur-md border ${borderColor} hover:bg-white/10 transition-colors group`}>
       <div className="flex justify-between items-start mb-2">
         <p className="text-slate-400 text-xs md:text-sm font-medium">{title}</p>
         <div className="p-1.5 md:p-2 bg-white/5 rounded-full text-slate-300 group-hover:text-white transition-colors">
