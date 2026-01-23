@@ -86,10 +86,12 @@ export default function Navbar() {
                  getInitials(user.name || "Guest")
                )}
             </div>
+            
+            {/* UPDATED: Only shows name now */}
             <div className="hidden lg:block">
-              <p className="text-sm font-bold text-white leading-none">{user.name}</p>
-              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide mt-0.5">Pro Member</p>
+              <p className="text-sm font-bold text-white">{user.name}</p>
             </div>
+
             {/* Desktop Logout Button */}
             <button 
               onClick={handleLogout} 
