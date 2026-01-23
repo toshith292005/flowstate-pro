@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // 1. CRITICAL COMPONENTS (Load immediately)
 import Navbar from "./components/Navbar";
@@ -101,6 +102,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
+        <SpeedInsights />
       </MainLayout>
     </BrowserRouter>
   );
