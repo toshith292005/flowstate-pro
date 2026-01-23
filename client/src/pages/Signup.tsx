@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { User, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, Eye, EyeOff, Loader2, Zap } from "lucide-react";
 import axios from "axios";
 
 // 1. DYNAMIC API URL
@@ -48,22 +48,25 @@ export default function Signup() {
     // OPTIMIZATION: min-h-[100dvh] handles mobile browser bars (Safari/Chrome on iOS)
     <div className="min-h-[100dvh] w-full font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-4 md:p-6 relative bg-black overflow-hidden">
       
-      {/* Background Ambience - Matching Login Page */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-         <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-900/20 blur-[120px]"></div>
-         <div className="absolute top-[10%] right-[10%] w-[40%] h-[40%] rounded-full bg-indigo-900/20 blur-[120px]"></div>
-         {/* Noise texture for premium feel */}
+      {/* 1. BACKGROUND AMBIENCE (Unified with Landing/Login) */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px]"></div>
+         <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-900/20 blur-[120px]"></div>
          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
       </div>
 
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 md:p-10 space-y-6 border border-white/10 relative z-10">
+      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-10 space-y-6 border border-white/10 relative z-10">
         
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-black text-white tracking-tight">Create Account</h1>
-          <p className="text-slate-400 text-sm md:text-base">Join FlowState today</p>
+        {/* Header with Logo */}
+        <div className="text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/30 mb-6">
+                <Zap size={24} className="text-white fill-white" />
+            </div>
+            <h1 className="text-3xl font-black text-white tracking-tight">Create Account</h1>
+            <p className="text-slate-400 text-sm md:text-base mt-2">Join FlowState to boost your productivity</p>
         </div>
 
-        {/* Google Signup Placeholder (Consistent with Login) */}
+        {/* Google Signup Placeholder */}
         <button 
           type="button"
           onClick={handleFeatureComingSoon}
@@ -99,7 +102,7 @@ export default function Signup() {
                 placeholder="John Doe" 
                 // OPTIMIZATION: autoCapitalize="words" helps users type names faster on mobile
                 autoCapitalize="words"
-                className="w-full pl-11 pr-4 h-12 rounded-xl border border-white/10 bg-black/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base" 
+                className="w-full pl-11 pr-4 h-12 rounded-xl border border-white/10 bg-black/40 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base font-medium" 
                 required
               />
             </div>
@@ -116,7 +119,7 @@ export default function Signup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com" 
-                className="w-full pl-11 pr-4 h-12 rounded-xl border border-white/10 bg-black/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base" 
+                className="w-full pl-11 pr-4 h-12 rounded-xl border border-white/10 bg-black/40 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base font-medium" 
                 required
               />
             </div>
@@ -132,7 +135,7 @@ export default function Signup() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••" 
-                className="w-full pl-11 pr-12 h-12 rounded-xl border border-white/10 bg-black/20 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base" 
+                className="w-full pl-11 pr-12 h-12 rounded-xl border border-white/10 bg-black/40 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base font-medium" 
                 required
               />
               <button 
