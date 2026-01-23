@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { User, Bell, Shield, Trash2, LogOut, Edit2, Check, X, Link as LinkIcon, Loader2, Camera } from "lucide-react"; 
+import { useState, useEffect, useRef } from "react";
+import { User, Bell, Shield, Trash2, LogOut, Edit2, Check, X, Loader2, Camera } from "lucide-react"; 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -8,6 +8,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 export default function Settings() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // PROFILE STATE
   const [user, setUser] = useState(() => {
@@ -39,7 +40,7 @@ export default function Settings() {
         id: storedUser.id || storedUser._id, 
         name: tempName,
         email: user.email, 
-        photo: tempPhoto 
+        photo: tempPhoto // This will be the base64 string if a new file was selected
       });
       const updatedUser = res.data;
       setUser(updatedUser);
@@ -47,7 +48,7 @@ export default function Settings() {
       window.dispatchEvent(new Event("userUpdated")); 
       setIsEditing(false);
     } catch (err) {
-      alert("Failed to save profile.");
+      alert("Failed to save profile. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -70,10 +71,18 @@ export default function Settings() {
     setTempName(user.name);
     setTempPhoto(user.photo);
     setIsEditing(false);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
   };
 
   const handleDeletePhoto = () => {
-    if (confirm("Remove profile picture?")) setTempPhoto(""); 
+    if (confirm("Remove profile picture?")) {
+        setTempPhoto("");
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    }
   };
 
   const toggleNotification = (key: string) => {
@@ -92,10 +101,27 @@ export default function Settings() {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
   };
 
+  // HANDLE FILE SELECTION FROM GALLERY/EXPLORER
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTempPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // TRIGGER FILE INPUT CLICK
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
       
-      {/* 1. BACKGROUND AMBIENCE (Copied from Dashboard) */}
+      {/* 1. BACKGROUND AMBIENCE */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
          <div className="absolute top-[-10%] left-[20%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px]"></div>
          <div className="absolute bottom-[10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-900/10 blur-[120px]"></div>
@@ -141,10 +167,25 @@ export default function Settings() {
                         getInitials(isEditing ? tempName : user.name)
                     )}
                     </div>
+                    
+                    {/* CAMERA BUTTON TO UPLOAD FROM GALLERY */}
                     {isEditing && (
-                        <div className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full border-2 border-black text-white shadow-lg">
-                            <Camera size={14} />
-                        </div>
+                        <>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                onChange={handleFileChange} 
+                                accept="image/*" 
+                                className="hidden" 
+                            />
+                            <button 
+                                onClick={handleUploadClick} 
+                                className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full border-2 border-black text-white shadow-lg hover:bg-indigo-500 transition-colors active:scale-95"
+                                title="Upload from Gallery"
+                            >
+                                <Camera size={14} />
+                            </button>
+                        </>
                     )}
                 </div>
                 
@@ -161,26 +202,18 @@ export default function Settings() {
                                 className="block w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-indigo-500 transition-all text-base" 
                             />
                         </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 ml-1 uppercase block mb-1">Profile Image URL</label>
-                            <div className="flex gap-2">
-                                <div className="relative flex-1">
-                                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-                                    <input 
-                                        type="text" 
-                                        value={tempPhoto} 
-                                        onChange={(e) => setTempPhoto(e.target.value)} 
-                                        placeholder="https://..." 
-                                        className="block w-full bg-black/40 border border-white/20 rounded-xl pl-10 pr-3 py-3 text-slate-300 text-base focus:outline-none focus:border-indigo-500 transition-all" 
-                                    />
-                                </div>
-                                {tempPhoto && (
-                                    <button onClick={handleDeletePhoto} className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-colors active:scale-95 shrink-0">
-                                        <Trash2 size={20} />
+                        {/* URL INPUT REMOVED - Only Gallery Upload is used now */}
+                        {tempPhoto && (
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 ml-1 uppercase block mb-1">Profile Picture</label>
+                                <div className="flex items-center justify-between bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-slate-300">
+                                    <span className="text-sm truncate">Image Selected</span>
+                                    <button onClick={handleDeletePhoto} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-lg transition-colors active:scale-95 shrink-0">
+                                        <Trash2 size={18} />
                                     </button>
-                                )}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                     ) : (
                     <div className="space-y-1">
