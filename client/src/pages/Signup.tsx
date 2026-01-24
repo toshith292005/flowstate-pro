@@ -3,8 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, Eye, EyeOff, Loader2, Zap } from "lucide-react";
 import axios from "axios";
 
-// 🚀 FIX: POINT DIRECTLY TO YOUR RENDER BACKEND
-// This variable is for the AXIOS requests (email/password signup)
+// We keep this for the email/password signup
 const API_BASE_URL = "https://flowstate-pro.onrender.com";
 
 export default function Signup() {
@@ -61,8 +60,8 @@ export default function Signup() {
             <p className="text-slate-400 text-sm md:text-base mt-2">Join FlowState to boost your productivity</p>
         </div>
 
-        {/* 🚀 HARDCODED GOOGLE SIGNUP LINK */}
-        {/* We use the full literal URL string to ensure we leave React and go to Render */}
+        {/* 🚀 HARDCODED LINK: This forces the browser to go to the server */}
+        {/* DO NOT CHANGE THIS LINE */}
         <a 
           href="https://flowstate-pro.onrender.com/auth/google"
           className="w-full bg-white/5 hover:bg-white/10 text-white font-medium h-12 rounded-xl transition-all border border-white/10 flex items-center justify-center gap-3 active:scale-95 cursor-pointer"
