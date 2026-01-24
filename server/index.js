@@ -2,56 +2,65 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-// --- 1. AUTH IMPORTS ---
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const cookieSession = require('cookie-session');
+const jwt = require('jsonwebtoken'); // ✅ Using Tokens
+const User = require('./models/User'); // ✅ Shared User model
 
 const app = express();
 
-// --- 2. DATABASE CONNECTION & USER MODEL ---
-const MONGO_URI = process.env.MONGO_URI;
-
-mongoose.connect(MONGO_URI)
+// --- 1. DATABASE CONNECTION ---
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected Successfully"))
   .catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
-// ✅ CORRECT: Import the shared User model instead of defining it twice
-const User = require('./models/User');
+// --- 2. MIDDLEWARE ---
+app.use(cors({
+  origin: [
+    "http://localhost:5173", 
+    "https://flowstate-pro-beige.vercel.app" // Your Vercel Frontend
+  ],
+  credentials: true
+}));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(passport.initialize());
 
 // --- 3. PASSPORT CONFIGURATION ---
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser((id, done) => {
-  User.findById(id).then(user => done(null, user));
-});
-
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: '/auth/google/callback',
-      proxy: true // Important: Allows Google to trust the HTTPS proxy on Render
+      proxy: true
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const existingUser = await User.findOne({ googleId: profile.id });
-        if (existingUser) {
-          return done(null, existingUser);
+        // A. Check for existing user
+        let user = await User.findOne({ googleId: profile.id });
+        if (user) return done(null, user);
+
+        // B. Check if email exists (link accounts)
+        const email = profile.emails[0].value;
+        user = await User.findOne({ email });
+        if (user) {
+          user.googleId = profile.id;
+          user.photo = profile.photos[0].value;
+          await user.save();
+          return done(null, user);
         }
-        
-        // ✅ CORRECT: Use 'name' to match your User.js model
-        const newUser = await new User({
+
+        // C. Create new user
+        const newUser = new User({
           googleId: profile.id,
-          name: profile.displayName, // Changed from displayName to name
-          email: profile.emails[0].value,
+          name: profile.displayName,
+          email: email,
           photo: profile.photos[0].value
-        }).save();
-        
+        });
+        await newUser.save();
         done(null, newUser);
+
       } catch (err) {
         done(err, null);
       }
@@ -59,68 +68,45 @@ passport.use(
   )
 );
 
-// --- 4. MIDDLEWARE ---
-app.use(
-  cookieSession({
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    keys: [process.env.COOKIE_KEY || 'default-secret-key']
-  })
+// --- 4. ROUTES ---
+
+// A. Start Google Login
+app.get('/auth/google',
+  passport.authenticate('google', { session: false, scope: ['profile', 'email'] })
 );
 
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.use(cors({
-  origin: [
-    "http://localhost:5173", 
-    "https://flowstate-pro-beige.vercel.app"
-  ],
-  credentials: true // Crucial for passing the login cookie
-}));
-
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-// --- 5. ROUTES ---
-
-// Google Auth Routes
-app.get(
-  '/auth/google',
-  passport.authenticate('google', {
-    scope: ['profile', 'email']
-  })
-);
-
-app.get(
-  '/auth/google/callback',
-  passport.authenticate('google'),
+// B. Google Callback (THE CRITICAL PART)
+app.get('/auth/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
   (req, res) => {
-    // Redirect user back to the dashboard after login
-    res.redirect(`${process.env.CLIENT_URL}/dashboard`);
+    // 1. Generate Token
+    // ✅ FIX: Use the variable from Render (2026), NOT the hardcoded "123"
+    const token = jwt.sign(
+      { id: req.user._id }, 
+      process.env.JWT_SECRET 
+    );
+    
+    // 2. Redirect to Frontend with Token
+    const clientURL = process.env.CLIENT_URL || "https://flowstate-pro-beige.vercel.app";
+    
+    res.send(`
+      <script>
+        localStorage.setItem('flowstate_token', '${token}');
+        localStorage.setItem('flowstate_user', '${JSON.stringify(req.user)}');
+        window.location.href = '${clientURL}/dashboard';
+      </script>
+    `);
   }
 );
 
-app.get('/api/current_user', (req, res) => {
-  res.send(req.user);
-});
+// C. Import Other Routes
+const authRoutes = require('./routes/auth');
+const taskRoutes = require('./routes/tasks'); 
 
-// Logout Route (Async Fix Applied)
-app.get('/api/logout', (req, res, next) => {
-  req.logout(function(err) {
-    if (err) { return next(err); }
-    res.redirect(process.env.CLIENT_URL);
-  });
-});
-
-// Existing Task Routes
-const taskRoutes = require('./routes/tasks');
+app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 
-// Auth Routes (Login/Register)
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-
-// --- 6. SERVER START ---
+// --- 5. SERVER START ---
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
