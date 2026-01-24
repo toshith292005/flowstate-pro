@@ -1,7 +1,6 @@
-import { Suspense, lazy, useEffect } from "react"; // 1. Added useEffect
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import axios from "axios"; // 2. Added axios
 
 // 1. CRITICAL COMPONENTS
 import Navbar from "./components/Navbar";
@@ -51,33 +50,9 @@ function AuthenticatedPage({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
-  // --- 6. CRITICAL SESSION SYNC LOGIC ---
-  useEffect(() => {
-    const syncUserSession = async () => {
-      // Use dynamic URL (checks .env first, falls back to localhost)
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-      try {
-        // Ask backend: "Who is logged in?" via Cookie
-        const res = await axios.get(`${API_URL}/api/current_user`, {
-          withCredentials: true // IMPORTANT: Sends the HTTP-only cookie
-        });
-
-        if (res.data) {
-          // If backend finds a user, save to localStorage so the app knows
-          localStorage.setItem("flowstate_user", JSON.stringify(res.data));
-          
-          // Tell the UI (Navbar) to update immediately
-          window.dispatchEvent(new Event("userUpdated"));
-        }
-      } catch (error) {
-        // No session found - do nothing (user remains logged out)
-      }
-    };
-
-    syncUserSession();
-  }, []);
-  // -------------------------------------
+  // 🚀 FIX: REMOVED THE "useEffect" API CALL COMPLETELY.
+  // We no longer need to ask the server "/api/current_user".
+  // The app will simply read 'flowstate_token' from LocalStorage.
 
   return (
     <BrowserRouter>
