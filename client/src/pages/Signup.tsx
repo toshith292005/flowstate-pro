@@ -8,11 +8,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Signup() {
   const navigate = useNavigate();
-  // Keeping your state structure
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // NEW: Visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -40,15 +39,15 @@ export default function Signup() {
     }
   };
 
+  // --- REVERTED TO PLACEHOLDER ---
   const handleFeatureComingSoon = () => {
     alert("🚀 Feature Coming Soon!\n\nGoogle Signup will be available in the next update.");
   };
 
   return (
-    // OPTIMIZATION: min-h-[100dvh] handles mobile browser bars (Safari/Chrome on iOS)
     <div className="min-h-[100dvh] w-full font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-4 md:p-6 relative bg-black overflow-hidden">
       
-      {/* 1. BACKGROUND AMBIENCE (Unified with Landing/Login) */}
+      {/* BACKGROUND AMBIENCE */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px]"></div>
          <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-900/20 blur-[120px]"></div>
@@ -57,7 +56,7 @@ export default function Signup() {
 
       <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-10 space-y-6 border border-white/10 relative z-10">
         
-        {/* Header with Logo */}
+        {/* Header */}
         <div className="text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/30 mb-6">
                 <Zap size={24} className="text-white fill-white" />
@@ -66,7 +65,7 @@ export default function Signup() {
             <p className="text-slate-400 text-sm md:text-base mt-2">Join FlowState to boost your productivity</p>
         </div>
 
-        {/* Google Signup Placeholder */}
+        {/* Google Signup (Placeholder) */}
         <button 
           type="button"
           onClick={handleFeatureComingSoon}
@@ -90,7 +89,6 @@ export default function Signup() {
         )}
 
         <form onSubmit={handleSignup} className="space-y-4">
-          {/* Full Name */}
           <div className="space-y-2">
             <label className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Full Name</label>
             <div className="relative group">
@@ -100,7 +98,6 @@ export default function Signup() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="John Doe" 
-                // OPTIMIZATION: autoCapitalize="words" helps users type names faster on mobile
                 autoCapitalize="words"
                 className="w-full pl-11 pr-4 h-12 rounded-xl border border-white/10 bg-black/40 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base font-medium" 
                 required
@@ -108,14 +105,13 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* Email */}
           <div className="space-y-2">
             <label className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Email</label>
             <div className="relative group">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
               <input 
                 type="email" 
-                inputMode="email" // KEYBOARD OPTIMIZATION
+                inputMode="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com" 
@@ -125,13 +121,12 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* Password */}
           <div className="space-y-2">
             <label className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Password</label>
             <div className="relative group">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
               <input 
-                type={showPassword ? "text" : "password"} // VISIBILITY TOGGLE
+                type={showPassword ? "text" : "password"} 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••" 

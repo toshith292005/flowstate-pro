@@ -1,24 +1,27 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react"; // 1. Added useEffect
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import axios from "axios"; // 2. Added axios
 
-// 1. CRITICAL COMPONENTS (Load immediately)
+// 1. CRITICAL COMPONENTS
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// 2. LAZY LOAD PAGES (Performance Optimization)
-// This splits your bundle so the initial load is much faster on mobile networks.
+// 2. LAZY LOAD PAGES
 const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword")); // <--- NEW IMPORT
+
+// --- NEW AUTH PAGES ---
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword")); 
+
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const Settings = lazy(() => import("./pages/Settings"));
 
 // 3. LOADING SCREEN
-// Shows while the lazy pages are being fetched
 function LoadingScreen() {
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-black text-white">
@@ -28,76 +31,73 @@ function LoadingScreen() {
   );
 }
 
-// 4. MAIN LAYOUT WRAPPER
+// 4. MAIN LAYOUT
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    // OPTIMIZATION: min-h-[100dvh] fixes mobile browser address bar issues
     <div className="min-h-[100dvh] w-full font-sans text-white bg-black selection:bg-indigo-500 selection:text-white">
       {children}
     </div>
   );
 }
 
-// 5. AUTHENTICATED LAYOUT (Reduces repetition)
-// Wraps pages that need the Navbar
+// 5. AUTHENTICATED LAYOUT
 function AuthenticatedPage({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
-      <Navbar /> {/* Handles both Desktop Top-bar and Mobile Bottom-bar */}
+      <Navbar />
       {children}
     </ProtectedRoute>
   );
 }
 
 function App() {
+  // --- 6. CRITICAL SESSION SYNC LOGIC ---
+  useEffect(() => {
+    const syncUserSession = async () => {
+      // Use dynamic URL (checks .env first, falls back to localhost)
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+      try {
+        // Ask backend: "Who is logged in?" via Cookie
+        const res = await axios.get(`${API_URL}/api/current_user`, {
+          withCredentials: true // IMPORTANT: Sends the HTTP-only cookie
+        });
+
+        if (res.data) {
+          // If backend finds a user, save to localStorage so the app knows
+          localStorage.setItem("flowstate_user", JSON.stringify(res.data));
+          
+          // Tell the UI (Navbar) to update immediately
+          window.dispatchEvent(new Event("userUpdated"));
+        }
+      } catch (error) {
+        // No session found - do nothing (user remains logged out)
+      }
+    };
+
+    syncUserSession();
+  }, []);
+  // -------------------------------------
+
   return (
     <BrowserRouter>
       <MainLayout>
-        {/* Suspense catches the lazy loading state */}
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             {/* --- PUBLIC ROUTES --- */}
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} /> {/* <--- NEW ROUTE */}
+            
+            {/* NEW: Forgot Password Flow */}
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             
             {/* --- PROTECTED ROUTES --- */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <AuthenticatedPage>
-                  <Dashboard />
-                </AuthenticatedPage>
-              } 
-            />
-            
-            <Route 
-              path="/analytics" 
-              element={
-                <AuthenticatedPage>
-                  <Analytics />
-                </AuthenticatedPage>
-              } 
-            />
-
-            <Route 
-              path="/calendar" 
-              element={
-                <AuthenticatedPage>
-                  <Calendar />
-                </AuthenticatedPage>
-              } 
-            />
-
-            <Route 
-              path="/settings" 
-              element={
-                <AuthenticatedPage>
-                  <Settings />
-                </AuthenticatedPage>
-              } 
-            />
+            <Route path="/dashboard" element={<AuthenticatedPage><Dashboard /></AuthenticatedPage>} />
+            <Route path="/analytics" element={<AuthenticatedPage><Analytics /></AuthenticatedPage>} />
+            <Route path="/calendar" element={<AuthenticatedPage><Calendar /></AuthenticatedPage>} />
+            <Route path="/settings" element={<AuthenticatedPage><Settings /></AuthenticatedPage>} />
             
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />

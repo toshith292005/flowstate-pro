@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutGrid, BarChart3, Calendar, Settings, LogOut, Zap } from "lucide-react";
+import axios from "axios"; // 1. Added Axios Import
 
 export default function Navbar() {
   const location = useLocation();
@@ -24,10 +25,20 @@ export default function Navbar() {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
   };
 
-  const handleLogout = () => {
+  // 2. Updated Logout Logic to kill Backend Session
+  const handleLogout = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      // Tell backend to delete the httpOnly cookie
+      await axios.get(`${API_URL}/api/logout`, { withCredentials: true });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+
+    // Clear Frontend
     localStorage.removeItem("flowstate_token");
     localStorage.removeItem("flowstate_user");
-    window.dispatchEvent(new Event("userUpdated")); // Notify app to update state
+    window.dispatchEvent(new Event("userUpdated"));
     navigate("/login");
   };
 

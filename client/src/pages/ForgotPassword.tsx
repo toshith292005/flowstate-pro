@@ -17,7 +17,7 @@ export default function ForgotPassword() {
     setStatus("idle");
 
     try {
-      // Assuming your backend has this endpoint
+      // Connects to your Backend to send the email
       await axios.post(`${API_BASE_URL}/api/auth/forgot-password`, { email });
       setStatus("success");
       setMessage("If an account exists, we've sent a reset link.");
@@ -32,7 +32,7 @@ export default function ForgotPassword() {
   return (
     <div className="min-h-[100dvh] w-full font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-4 relative bg-black overflow-hidden">
       
-      {/* 1. BACKGROUND AMBIENCE */}
+      {/* BACKGROUND AMBIENCE */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px]"></div>
          <div className="absolute bottom-[10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-900/10 blur-[120px]"></div>
@@ -42,7 +42,6 @@ export default function ForgotPassword() {
       {/* CARD */}
       <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/10 relative z-10">
         
-        {/* Header */}
         <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/30 mb-4">
                 <Zap size={24} className="text-white fill-white" />
@@ -58,13 +57,12 @@ export default function ForgotPassword() {
             </div>
             <h3 className="text-emerald-400 font-bold mb-1">Check your mail</h3>
             <p className="text-slate-400 text-sm mb-4">{message}</p>
-            <Link to="/login" className="text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 py-2 px-4 rounded-lg transition-colors inline-block w-full">
+            <Link to="/login" className="text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 py-2.5 px-4 rounded-xl transition-colors inline-block w-full">
               Back to Sign In
             </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            
             {status === "error" && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
                     <AlertCircle size={16} /> {message}
