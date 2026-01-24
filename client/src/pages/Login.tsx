@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, Eye, EyeOff, Loader2, Zap } from "lucide-react";
 import axios from "axios";
 
-// 1. DYNAMIC API URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// 🚀 FIX: POINT DIRECTLY TO YOUR RENDER BACKEND
+// (Replace this URL if your Render link is different)
+const API_BASE_URL = "https://flowstate-pro.onrender.com";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ export default function Login() {
         </div>
 
         {/* 🚀 REAL GOOGLE LOGIN LINK */}
-        {/* This now points directly to your Backend Google Route */}
+        {/* Now uses the hardcoded API_BASE_URL */}
         <a 
           href={`${API_BASE_URL}/auth/google`}
           className="w-full bg-white/5 hover:bg-white/10 text-white font-medium h-12 rounded-xl transition-all border border-white/10 flex items-center justify-center gap-3 active:scale-95 cursor-pointer"
