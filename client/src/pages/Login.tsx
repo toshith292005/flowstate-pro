@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, ArrowRight, ArrowLeft, AlertCircle, Eye, EyeOff, Loader2, Zap } from "lucide-react";
 import axios from "axios";
 
-// 🚀 FIX: POINT DIRECTLY TO YOUR RENDER BACKEND
-// (Replace this URL if your Render link is different)
+// 🚀 FIX: WE MUST HARDCODE THE BACKEND URL HERE
+// If we use "import.meta.env...", it might fail and create a "refresh loop"
 const API_BASE_URL = "https://flowstate-pro.onrender.com";
 
 export default function Login() {
@@ -60,8 +60,8 @@ export default function Login() {
           <p className="text-slate-400 text-sm md:text-base mt-2">Sign in to continue to FlowState</p>
         </div>
 
-        {/* 🚀 REAL GOOGLE LOGIN LINK */}
-        {/* Now uses the hardcoded API_BASE_URL */}
+        {/* 🚀 GOOGLE LOGIN LINK (The Important Part) */}
+        {/* We use API_BASE_URL to ensure we leave React and go to Render */}
         <a 
           href={`${API_BASE_URL}/auth/google`}
           className="w-full bg-white/5 hover:bg-white/10 text-white font-medium h-12 rounded-xl transition-all border border-white/10 flex items-center justify-center gap-3 active:scale-95 cursor-pointer"
