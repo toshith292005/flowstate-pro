@@ -60,6 +60,7 @@ export default function Login() {
         </div>
 
         {/* 🚀 REAL GOOGLE LOGIN LINK */}
+        {/* This now points directly to your Backend Google Route */}
         <a 
           href={`${API_BASE_URL}/auth/google`}
           className="w-full bg-white/5 hover:bg-white/10 text-white font-medium h-12 rounded-xl transition-all border border-white/10 flex items-center justify-center gap-3 active:scale-95 cursor-pointer"
