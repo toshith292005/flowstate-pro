@@ -51,6 +51,16 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found" });
 
+    // --- 🛡️ SAFETY CHECK FOR GOOGLE USERS ---
+    // If user exists but has NO password, they signed up with Google.
+    // We must stop here to prevent a crash.
+    if (!user.password) {
+      return res.status(400).json({ 
+        message: "This account uses Google Login. Please click 'Continue with Google'." 
+      });
+    }
+    // ----------------------------------------
+
     // B. Validate Password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
@@ -68,7 +78,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 3. UPDATE USER PROFILE (NEW! 👇)
+// 3. UPDATE USER PROFILE
 router.put('/profile', async (req, res) => {
   try {
     const { id, name, email, photo } = req.body;
