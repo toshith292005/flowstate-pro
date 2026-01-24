@@ -61,7 +61,6 @@ export default function Signup() {
         </div>
 
         {/* 🚀 HARDCODED LINK: This forces the browser to go to the server */}
-        {/* We removed {API_BASE_URL} and typed the full https link to be safe */}
         <a 
           href="https://flowstate-pro.onrender.com/auth/google"
           className="w-full bg-white/5 hover:bg-white/10 text-white font-medium h-12 rounded-xl transition-all border border-white/10 flex items-center justify-center gap-3 active:scale-95 cursor-pointer"
@@ -85,10 +84,15 @@ export default function Signup() {
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Full Name</label>
+            {/* ✅ FIX 1: Add htmlFor */}
+            <label htmlFor="name" className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Full Name</label>
             <div className="relative group">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
+              {/* ✅ FIX 2: Add id, name, autoComplete */}
               <input 
+                id="name"
+                name="name"
+                autoComplete="name"
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -101,10 +105,15 @@ export default function Signup() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Email</label>
+            {/* ✅ FIX 3: Add htmlFor */}
+            <label htmlFor="email" className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Email</label>
             <div className="relative group">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
+              {/* ✅ FIX 4: Add id, name, autoComplete */}
               <input 
+                id="email"
+                name="email"
+                autoComplete="email"
                 type="email" 
                 inputMode="email"
                 value={email}
@@ -117,10 +126,15 @@ export default function Signup() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Password</label>
+            {/* ✅ FIX 5: Add htmlFor */}
+            <label htmlFor="password" className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Password</label>
             <div className="relative group">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
+              {/* ✅ FIX 6: Add id, name, autoComplete */}
               <input 
+                id="password"
+                name="password"
+                autoComplete="new-password"
                 type={showPassword ? "text" : "password"} 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
