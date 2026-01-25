@@ -11,7 +11,9 @@ const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword")); 
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+// ✅ NEW: Import the Success Page
+const LoginSuccess = lazy(() => import("./pages/LoginSuccess")); 
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Analytics = lazy(() => import("./pages/Analytics"));
@@ -38,7 +40,6 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 }
 
 // 5. AUTHENTICATED LAYOUT WRAPPER
-// ✅ MODIFICATION: Ensures Navbar is only injected for logged-in users
 function AuthenticatedPage({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
@@ -49,10 +50,6 @@ function AuthenticatedPage({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
-  // ✅ AUTH STRATEGY: 
-  // We use local token detection to avoid the "/api/current_user" 404 error 
-  // previously seen in your logs.
-
   return (
     <BrowserRouter>
       <MainLayout>
@@ -65,8 +62,10 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             
+            {/* ✅ NEW: This MUST be public so the backend can redirect here */}
+            <Route path="/login-success" element={<LoginSuccess />} />
+            
             {/* --- PROTECTED ROUTES --- */}
-            {/* These routes now use the secure "Catch and Save" token logic in Dashboard */}
             <Route path="/dashboard" element={<AuthenticatedPage><Dashboard /></AuthenticatedPage>} />
             <Route path="/analytics" element={<AuthenticatedPage><Analytics /></AuthenticatedPage>} />
             <Route path="/calendar" element={<AuthenticatedPage><Calendar /></AuthenticatedPage>} />
