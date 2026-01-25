@@ -87,8 +87,12 @@ router.post("/login", async (req, res) => {
 // 2. FORGOT PASSWORD ROUTES
 // ==========================================
 
+// 🚀 CRITICAL FIX FOR RENDER TIMEOUTS
+// We switched from 'service: gmail' to explicit SSL settings (Port 465)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USERNAME,
     pass: process.env.EMAIL_PASSWORD, // App Password
@@ -131,7 +135,7 @@ router.post("/forgot-password", async (req, res) => {
 
     res.json({ message: "Password reset email sent" });
   } catch (err) {
-    console.error(err);
+    console.error("Nodemailer Error:", err); // Improved logging
     res.status(500).json({ message: "Server error sending email" });
   }
 });
