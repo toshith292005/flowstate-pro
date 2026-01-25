@@ -10,8 +10,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
-
-// --- NEW AUTH PAGES ---
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword")); 
 
@@ -20,10 +18,10 @@ const Analytics = lazy(() => import("./pages/Analytics"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const Settings = lazy(() => import("./pages/Settings"));
 
-// 3. LOADING SCREEN
+// 3. LOADING SCREEN (Optimized for dark mode and mobile)
 function LoadingScreen() {
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-black text-white">
+    <div className="h-[100dvh] w-full flex flex-col items-center justify-center bg-black text-white">
       <Loader2 className="animate-spin text-indigo-500 mb-4" size={40} />
       <p className="text-slate-400 text-sm font-medium animate-pulse">Loading FlowState...</p>
     </div>
@@ -39,7 +37,8 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// 5. AUTHENTICATED LAYOUT
+// 5. AUTHENTICATED LAYOUT WRAPPER
+// ✅ MODIFICATION: Ensures Navbar is only injected for logged-in users
 function AuthenticatedPage({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
@@ -50,9 +49,9 @@ function AuthenticatedPage({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
-  // 🚀 FIX: REMOVED THE "useEffect" API CALL COMPLETELY.
-  // We no longer need to ask the server "/api/current_user".
-  // The app will simply read 'flowstate_token' from LocalStorage.
+  // ✅ AUTH STRATEGY: 
+  // We use local token detection to avoid the "/api/current_user" 404 error 
+  // previously seen in your logs.
 
   return (
     <BrowserRouter>
@@ -63,18 +62,17 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            
-            {/* NEW: Forgot Password Flow */}
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             
             {/* --- PROTECTED ROUTES --- */}
+            {/* These routes now use the secure "Catch and Save" token logic in Dashboard */}
             <Route path="/dashboard" element={<AuthenticatedPage><Dashboard /></AuthenticatedPage>} />
             <Route path="/analytics" element={<AuthenticatedPage><Analytics /></AuthenticatedPage>} />
             <Route path="/calendar" element={<AuthenticatedPage><Calendar /></AuthenticatedPage>} />
             <Route path="/settings" element={<AuthenticatedPage><Settings /></AuthenticatedPage>} />
             
-            {/* Catch-all */}
+            {/* Catch-all: Safety redirect for invalid URLs */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

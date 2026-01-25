@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutGrid, BarChart3, Calendar, Settings, LogOut, Zap } from "lucide-react";
-import axios from "axios"; // 1. Added Axios Import
 
 export default function Navbar() {
   const location = useLocation();
@@ -9,13 +8,18 @@ export default function Navbar() {
   
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("flowstate_user");
+    // Default to Guest if no user is found
     return saved ? JSON.parse(saved) : { name: "Guest", photo: null };
   });
 
   useEffect(() => {
     const handleUserUpdate = () => {
       const saved = localStorage.getItem("flowstate_user");
-      if (saved) setUser(JSON.parse(saved));
+      if (saved) {
+        setUser(JSON.parse(saved));
+      } else {
+        setUser({ name: "Guest", photo: null });
+      }
     };
     window.addEventListener("userUpdated", handleUserUpdate);
     return () => window.removeEventListener("userUpdated", handleUserUpdate);
@@ -25,21 +29,17 @@ export default function Navbar() {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
   };
 
-  // 2. Updated Logout Logic to kill Backend Session
-  const handleLogout = async () => {
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-      // Tell backend to delete the httpOnly cookie
-      await axios.get(`${API_URL}/api/logout`, { withCredentials: true });
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-
-    // Clear Frontend
+  // ✅ SIMPLIFIED LOGOUT: Just clear the local data
+  const handleLogout = () => {
+    // 1. Clear the local storage
     localStorage.removeItem("flowstate_token");
     localStorage.removeItem("flowstate_user");
+    
+    // 2. Notify other components (like this Navbar) to reset state
     window.dispatchEvent(new Event("userUpdated"));
-    navigate("/login");
+    
+    // 3. Send user back to the home page or login
+    navigate("/");
   };
 
   const navLinks = [
@@ -53,7 +53,6 @@ export default function Navbar() {
     <>
       {/* --- DESKTOP TOP NAVBAR --- */}
       <nav className="h-16 md:h-20 border-b border-white/10 bg-black/80 backdrop-blur-xl px-4 md:px-10 flex items-center justify-between sticky top-0 z-50 transition-all">
-        
         {/* Logo */}
         <div className="flex items-center gap-2">
           <Link to="/dashboard" className="flex items-center gap-2 group">
@@ -64,7 +63,7 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop Navigation Links (Hidden on Mobile) */}
+        {/* Desktop Navigation Links */}
         <div className="hidden md:flex items-center gap-1 bg-white/5 border border-white/5 p-1.5 rounded-full backdrop-blur-md">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
@@ -79,7 +78,6 @@ export default function Navbar() {
                   }
                 `}
               >
-                {/* Scale down icon slightly for desktop text labels */}
                 <span className="scale-75">{link.icon}</span>
                 {link.name}
               </Link>
@@ -97,13 +95,9 @@ export default function Navbar() {
                  getInitials(user.name || "Guest")
                )}
             </div>
-            
-            {/* UPDATED: Only shows name now */}
             <div className="hidden lg:block">
               <p className="text-sm font-bold text-white">{user.name}</p>
             </div>
-
-            {/* Desktop Logout Button */}
             <button 
               onClick={handleLogout} 
               className="hidden md:flex p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
@@ -116,7 +110,6 @@ export default function Navbar() {
       </nav>
 
       {/* --- MOBILE BOTTOM NAVIGATION --- */}
-      {/* Fixed to bottom, hidden on MD screens and up */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-xl border-t border-white/10 pb-safe">
         <div className="flex items-center justify-around px-2 py-3">
           {navLinks.map((link) => {
@@ -129,7 +122,6 @@ export default function Navbar() {
                   isActive ? "text-indigo-400" : "text-slate-500 hover:text-slate-300"
                 }`}
               >
-                {/* Icon Container with subtle glow if active */}
                 <div className={`relative ${isActive ? "drop-shadow-[0_0_8px_rgba(99,102,241,0.6)]" : ""}`}>
                     {link.icon}
                     {isActive && <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-400 rounded-full"></span>}

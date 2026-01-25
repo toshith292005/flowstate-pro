@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
+// 🚀 ADDED: useSearchParams and useNavigate for handling Google redirects
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Plus, CheckCircle2, Circle, Search, Calendar, Trash2, Edit2, AlertTriangle, BarChart3, X, Loader2, RefreshCcw, Filter } from "lucide-react";
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://flowstate-pro.onrender.com";
 
 interface Task {
   _id: string;
@@ -16,6 +18,23 @@ interface Task {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // --- 🚀 AUTH HANDSHAKE: CATCH TOKEN FROM URL ---
+  useEffect(() => {
+    const tokenFromUrl = searchParams.get("token");
+    if (tokenFromUrl) {
+      localStorage.setItem("flowstate_token", tokenFromUrl);
+      
+      // Notify Navbar and other components to update UI
+      window.dispatchEvent(new Event("userUpdated"));
+
+      // Clean the URL (Remove ?token=xyz)
+      navigate("/dashboard", { replace: true });
+    }
+  }, [searchParams, navigate]);
+
   const user = JSON.parse(localStorage.getItem("flowstate_user") || "{}");
   const userEmail = user.email; 
 
@@ -25,7 +44,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [userEmail]); // Refetch if user changes
 
   const fetchTasks = async () => {
     if (!userEmail) {
@@ -34,14 +53,14 @@ export default function Dashboard() {
     }
     
     setIsLoading(true);
-    
-    const wakeUpTimer = setTimeout(() => {
-      setIsWakingUp(true);
-    }, 3000);
+    const wakeUpTimer = setTimeout(() => setIsWakingUp(true), 3000);
 
     try {
+      // 🚀 AUTHENTICATION: Send token in headers for secure fetching
+      const token = localStorage.getItem("flowstate_token");
       const res = await axios.get(`${API_BASE_URL}/api/tasks`, {
-        params: { email: userEmail } 
+        params: { email: userEmail },
+        headers: { Authorization: `Bearer ${token}` }
       });
       setProjects(res.data);
     } catch (err) {
@@ -106,7 +125,10 @@ export default function Dashboard() {
     setProjects(projects.map(p => p._id === task._id ? updatedTask : p));
 
     try {
-        await axios.put(`${API_BASE_URL}/api/tasks/${task._id}`, updatedTask);
+        const token = localStorage.getItem("flowstate_token");
+        await axios.put(`${API_BASE_URL}/api/tasks/${task._id}`, updatedTask, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
     } catch (err) {
         alert("Failed to update task");
         fetchTasks(); 
@@ -116,7 +138,10 @@ export default function Dashboard() {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this task?")) {
       try {
-        await axios.delete(`${API_BASE_URL}/api/tasks/${id}`);
+        const token = localStorage.getItem("flowstate_token");
+        await axios.delete(`${API_BASE_URL}/api/tasks/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setProjects(projects.filter((p: any) => p._id !== id));
       } catch (err) {
         alert("Failed to delete task");
@@ -143,11 +168,16 @@ export default function Dashboard() {
     };
 
     try {
+      const token = localStorage.getItem("flowstate_token");
       if (editingId) {
-        const res = await axios.put(`${API_BASE_URL}/api/tasks/${editingId}`, taskData);
+        const res = await axios.put(`${API_BASE_URL}/api/tasks/${editingId}`, taskData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setProjects(projects.map((p: any) => (p._id === editingId ? res.data : p)));
       } else {
-        const res = await axios.post(`${API_BASE_URL}/api/tasks`, taskData);
+        const res = await axios.post(`${API_BASE_URL}/api/tasks`, taskData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setProjects([res.data, ...projects]);
       }
       setIsModalOpen(false);
@@ -206,7 +236,6 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            {/* REMOVED: Subtitle text here */}
           </div>
           <button onClick={openCreateModal} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
             <Plus size={18} /> New Task
@@ -229,7 +258,6 @@ export default function Dashboard() {
                 placeholder="Search tasks..." 
                 value={searchQuery} 
                 onChange={(e) => setSearchQuery(e.target.value)} 
-                // text-base prevents ios zoom
                 className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:bg-white/10 transition-all text-base" 
             />
           </div>
@@ -286,27 +314,16 @@ export default function Dashboard() {
               const overdue = isOverdue(project.dueDate, project.status);
               return (
                 <div key={project._id} className={`p-6 rounded-3xl bg-white/5 backdrop-blur-md border transition-all group relative overflow-hidden flex flex-col h-full ${overdue ? "border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.15)]" : "border-white/10 hover:border-indigo-500/50 hover:bg-white/10"}`}>
-                  
                   {overdue && <div className="absolute inset-0 bg-red-500/5 pointer-events-none"></div>}
-                  
                   <div className="relative z-10 flex flex-col gap-4 h-full">
                     <div className="flex justify-between items-start">
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-black/40 text-slate-300 border border-white/5">{project.category}</span>
-                      
-                      {/* OPTIMIZATION: Actions always visible on mobile (opacity-100), hover on desktop (lg:opacity-0) */}
                       <div className="flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => handleToggleComplete(project)} 
-                          title={project.status === "Completed" ? "Mark as To Do" : "Mark as Completed"}
-                          className={`p-1.5 rounded-lg transition-colors ${project.status === "Completed" ? "text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20" : "text-slate-400 hover:text-emerald-400 hover:bg-white/10"}`}
-                        >
-                            <CheckCircle2 size={18} />
-                        </button>
+                        <button onClick={() => handleToggleComplete(project)} className={`p-1.5 rounded-lg transition-colors ${project.status === "Completed" ? "text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20" : "text-slate-400 hover:text-emerald-400 hover:bg-white/10"}`}><CheckCircle2 size={18} /></button>
                         <button onClick={() => openEditModal(project)} className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-white/10 rounded-lg transition-colors"><Edit2 size={18} /></button>
                         <button onClick={() => handleDelete(project._id)} className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors"><Trash2 size={18} /></button>
                       </div>
                     </div>
-                    
                     <div>
                       <h3 className={`text-lg font-bold text-white line-clamp-1 ${project.status === "Completed" ? "line-through opacity-50 decoration-slate-500" : ""}`}>{project.title}</h3>
                       <div className="flex items-center gap-2 mt-2">
@@ -314,7 +331,6 @@ export default function Dashboard() {
                           <span className={`text-xs flex items-center gap-1 ${overdue ? "text-red-400 font-bold animate-pulse" : "text-slate-500"}`}>{overdue ? <AlertTriangle size={12} /> : <Calendar size={12} />} {overdue ? "Overdue: " : "Due: "} {project.dueDate}</span>
                       </div>
                     </div>
-                    
                     <div className="mt-auto space-y-2">
                       <div className="flex justify-between text-xs font-medium text-slate-400"><span>{project.status}</span><span>{project.progress}%</span></div>
                       <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
@@ -338,7 +354,6 @@ export default function Dashboard() {
         {/* MODAL SECTION */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
-            {/* OPTIMIZATION: max-h-[90vh] ensures modal fits on small screens with scroll */}
             <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl w-full max-w-lg p-6 md:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
               <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors"><X size={24} /></button>
               <h2 className="text-2xl font-bold text-white mb-6">{editingId ? "Edit Task" : "Create New Task"}</h2>
