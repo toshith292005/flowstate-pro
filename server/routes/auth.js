@@ -1,52 +1,92 @@
 const router = require("express").Router();
-const passport = require("passport");
-const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-// ... (Your existing Login/Register routes) ...
-
 // ==========================================
-// 1. GOOGLE AUTH ROUTES
+// 1. STANDARD AUTH ROUTES (Login/Register)
 // ==========================================
 
-// @route   GET /api/auth/google
-// @desc    Redirect to Google
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+// @route   POST /api/auth/register
+router.post("/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-// @route   GET /api/auth/google/callback
-// @desc    Google calls this after login
-router.get(
-  "/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: "/login" }),
-  (req, res) => {
-    // Generate JWT Token
-    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    
-    // Redirect to Frontend with Token
-    // VITAL: Change this URL to your live frontend URL
-    const frontendUrl = process.env.CLIENT_URL || "http://localhost:5173";
-    
-    // We pass the user object as a URL-encoded string for simplicity, 
-    // or you can just fetch it again on the frontend using the token.
-    const userString = encodeURIComponent(JSON.stringify({
-        _id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        photo: req.user.photo
-    }));
+    // Check if user exists
+    let user = await User.findOne({ email });
+    if (user) return res.status(400).json({ message: "User already exists" });
 
-    res.redirect(`${frontendUrl}/auth/success?token=${token}&user=${userString}`);
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    user = new User({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    await user.save();
+
+    // Create Token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+    res.status(201).json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        photo: user.photo
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
   }
-);
+});
 
+// @route   POST /api/auth/login
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Check user
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+
+    // Check if user is a Google-only account (no password)
+    if (!user.password) {
+      return res.status(400).json({ message: "Please log in with Google" });
+    }
+
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+    // Create Token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+    res.json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        photo: user.photo
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // ==========================================
 // 2. FORGOT PASSWORD ROUTES
 // ==========================================
 
-// Nodemailer Transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -64,6 +104,8 @@ router.post("/forgot-password", async (req, res) => {
 
     // Generate Token
     const resetToken = crypto.randomBytes(20).toString("hex");
+    
+    // Save token to DB
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
@@ -75,13 +117,22 @@ router.post("/forgot-password", async (req, res) => {
     // Send Email
     await transporter.sendMail({
       to: user.email,
-      subject: "Password Reset Request - FlowState",
-      html: `<p>Click <a href="${resetUrl}">here</a> to reset your password.</p>`,
+      subject: "Reset your FlowState Password",
+      html: `
+        <div style="font-family: sans-serif; padding: 20px;">
+          <h2>Password Reset Request</h2>
+          <p>You requested a password reset for FlowState.</p>
+          <p>Click the button below to reset it:</p>
+          <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+          <p style="margin-top: 20px; color: #666;">This link expires in 1 hour.</p>
+        </div>
+      `,
     });
 
-    res.json({ message: "Email sent" });
+    res.json({ message: "Password reset email sent" });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error(err);
+    res.status(500).json({ message: "Server error sending email" });
   }
 });
 
@@ -98,14 +149,19 @@ router.post("/reset-password/:token", async (req, res) => {
 
     if (!user) return res.status(400).json({ message: "Invalid or expired token" });
 
-    // Update Password (Make sure you have a pre-save hook to hash this!)
-    user.password = password; 
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+
+    // Clear reset fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
+    
     await user.save();
 
     res.json({ message: "Password updated successfully" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });
