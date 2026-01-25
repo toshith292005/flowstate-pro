@@ -88,15 +88,17 @@ router.post("/login", async (req, res) => {
 // ==========================================
 
 // 🚀 CRITICAL FIX FOR RENDER TIMEOUTS
-// We switched from 'service: gmail' to explicit SSL settings (Port 465)
+// 🚀 NUCLEAR FIX FOR RENDER TIMEOUTS
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
-  secure: true, // true for 465, false for other ports
+  secure: true, 
   auth: {
     user: process.env.EMAIL_USERNAME,
-    pass: process.env.EMAIL_PASSWORD, // App Password
+    pass: process.env.EMAIL_PASSWORD,
   },
+  // 1. Force IPv4 (Fixes the "Hanging" connection on Render)
+  family: 4, 
 });
 
 // @route   POST /api/auth/forgot-password
