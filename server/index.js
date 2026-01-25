@@ -9,6 +9,11 @@ const User = require("./models/User");
 
 const app = express();
 
+// 🚀 FIX 1: TRUST PROXY
+// This tells Express to trust that Render is secure (HTTPS),
+// preventing the "redirect_uri_mismatch" error.
+app.set('trust proxy', 1); 
+
 // --- 1. DATABASE CONNECTION ---
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected Successfully"))
@@ -33,8 +38,11 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      // 🚀 FIX: Updated to /api/auth to match your other routes
       callbackURL: "/api/auth/google/callback", 
+      
+      // 🚀 FIX 2: ENABLE PROXY SUPPORT IN PASSPORT
+      // This ensures the callback URL generated is "https://" and not "http://"
+      proxy: true, 
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -46,7 +54,6 @@ passport.use(
             email: profile.emails[0].value,
             password: "", 
             photo: profile.photos[0].value,
-            // 🚀 FIX: Critical! Save the Google ID for the database model
             googleId: profile.id 
           });
         }
@@ -59,18 +66,13 @@ passport.use(
 );
 
 // --- 4. GOOGLE AUTH ROUTES ---
-// We keep them here in index.js for simplicity. 
-// ⚠️ IMPORTANT: Remove these routes from routes/auth.js if they exist there!
-
-// A. Trigger Route (Matches your Frontend Button)
 app.get(
-  "/api/auth/google", // <--- Updated to /api
+  "/api/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// B. Callback Route (Matches Google Cloud Console)
 app.get(
-  "/api/auth/google/callback", // <--- Updated to /api
+  "/api/auth/google/callback",
   passport.authenticate("google", { session: false, failureRedirect: "/login" }),
   (req, res) => {
     // Generate Token
@@ -81,8 +83,7 @@ app.get(
     // Encode User Data
     const userData = encodeURIComponent(JSON.stringify(req.user));
     
-    // Redirect to Frontend Success Page
-    // Make sure CLIENT_URL is set (e.g., https://flowstate-pro-beige.vercel.app)
+    // Redirect
     res.redirect(`${process.env.CLIENT_URL}/login-success?token=${token}&user=${userData}`);
   }
 );
@@ -91,7 +92,6 @@ app.get(
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks'); 
 
-// Mount standard auth routes (Login/Signup/Forgot Password)
 app.use('/api/auth', authRoutes); 
 app.use('/api/tasks', taskRoutes);
 
