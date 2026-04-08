@@ -1,0 +1,14 @@
+# Dependencies
+node_modules
+server/node_modules
+
+# Environment variables (Safety First!)
+.env
+server/.env
+
+# Build outputs
+dist
+build
+
+# System files
+.DS_Store
