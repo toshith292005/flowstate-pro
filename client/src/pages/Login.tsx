@@ -14,25 +14,45 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaToken, setMfaToken] = useState("");
+  const [tempToken, setTempToken] = useState("");
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      // ✅ This URL is correct (Standard Login)
-      const res = await axios.post(`${API_BASE_URL}/api/auth/login`, {
-        email,
-        password
-      });
+      if (mfaRequired) {
+        const res = await axios.post(`${API_BASE_URL}/api/auth/mfa/verify-login`, {
+          tempToken,
+          mfaToken
+        });
+        localStorage.setItem("flowstate_token", res.data.token);
+        localStorage.setItem("flowstate_user", JSON.stringify(res.data.user));
+        window.dispatchEvent(new Event("userUpdated"));
+        navigate("/dashboard");
+      } else {
+        const res = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+          email,
+          password
+        });
+        
+        if (res.data.mfaRequired) {
+          setMfaRequired(true);
+          setTempToken(res.data.tempToken);
+          setLoading(false);
+          return;
+        }
 
-      localStorage.setItem("flowstate_token", res.data.token);
-      localStorage.setItem("flowstate_user", JSON.stringify(res.data.user));
-
-      window.dispatchEvent(new Event("userUpdated"));
-      navigate("/dashboard");
+        localStorage.setItem("flowstate_token", res.data.token);
+        localStorage.setItem("flowstate_user", JSON.stringify(res.data.user));
+        window.dispatchEvent(new Event("userUpdated"));
+        navigate("/dashboard");
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid email or password");
+      setError(err.response?.data?.message || "Invalid credentials or MFA token");
     } finally {
       setLoading(false);
     }
@@ -132,6 +152,25 @@ export default function Login() {
               </button>
             </div>
           </div>
+
+          {mfaRequired && (
+            <div className="space-y-2">
+              <label htmlFor="mfaToken" className="text-xs md:text-sm font-semibold text-slate-300 ml-1">MFA Code</label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
+                <input 
+                  id="mfaToken"
+                  name="mfaToken"
+                  type="text" 
+                  value={mfaToken}
+                  onChange={(e) => setMfaToken(e.target.value)}
+                  placeholder="123456" 
+                  className="w-full pl-11 pr-4 h-12 rounded-xl border border-indigo-500/50 bg-black/40 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-base font-medium" 
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           <button 
             type="submit" 

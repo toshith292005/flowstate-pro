@@ -87,7 +87,21 @@ export default function Navbar() {
 
         {/* User Profile & Logout */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 md:pl-6">
+          {!user.isPremium ? (
+            <Link 
+              to="/settings" 
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95"
+            >
+              <Zap size={16} className="fill-white" /> <span className="hidden lg:block">Upgrade to Pro</span>
+              <span className="block lg:hidden">Pro</span>
+            </Link>
+          ) : (
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold rounded-xl">
+              <Zap size={16} className="fill-emerald-400" /> <span className="hidden lg:block">Pro Active</span>
+            </div>
+          )}
+          
+          <div className={`flex items-center gap-3 md:pl-4 border-l border-white/10`}>
             <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-indigo-900/50 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold overflow-hidden shadow-inner">
                {user.photo ? (
                  <img src={user.photo} alt="Profile" className="w-full h-full object-cover" />

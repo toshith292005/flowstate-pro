@@ -21,7 +21,12 @@
     "mongoose": "^9.1.5",
     "nodemailer": "^7.0.12",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6",
+    "redis": "^5.12.1",
+    "speakeasy": "^2.0.0",
+    "twilio": "^6.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

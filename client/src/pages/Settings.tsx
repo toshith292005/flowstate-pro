@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { User, Bell, Shield, Trash2, LogOut, Edit2, Check, X, Loader2, Camera } from "lucide-react"; 
+import { User, Bell, Shield, Trash2, LogOut, Edit2, Check, X, Loader2, Camera, Zap, Smartphone, Lock } from "lucide-react"; 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -25,6 +25,14 @@ export default function Settings() {
     const saved = localStorage.getItem("flowstate_settings");
     return saved ? JSON.parse(saved) : { taskReminders: true, weeklySummary: false };
   });
+
+  // MFA STATE
+  const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber || "");
+  const [mfaOtp, setMfaOtp] = useState("");
+  const [mfaStep, setMfaStep] = useState<"idle" | "sent" | "done">(user.mfaEnabled ? "done" : "idle");
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaMsg, setMfaMsg] = useState("");
+
 
   useEffect(() => {
     localStorage.setItem("flowstate_settings", JSON.stringify(settings));
@@ -249,6 +257,191 @@ export default function Settings() {
                 <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-md ${settings.weeklySummary ? "right-1" : "left-1"}`}></div>
                 </div>
             </div>
+            </div>
+        </section>
+
+        {/* SECURITY / MFA */}
+        <section className="bg-white/5 border border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-md">
+            <h2 className="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <Lock size={20} className="text-indigo-400" /> Two-Factor Authentication
+            </h2>
+            <p className="text-slate-400 text-sm mb-6">
+                Add your mobile number to receive a one-time SMS code each time you log in.
+            </p>
+
+            {mfaStep === "done" ? (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                        <Smartphone size={20} className="text-emerald-400 shrink-0" />
+                        <div>
+                            <p className="text-white font-bold text-sm">2FA Active</p>
+                            <p className="text-slate-400 text-xs">{user.phoneNumber || phoneNumber}</p>
+                        </div>
+                        <div className="ml-auto">
+                            <Check size={18} className="text-emerald-400" />
+                        </div>
+                    </div>
+                    <button
+                        onClick={async () => {
+                            const token = localStorage.getItem("flowstate_token");
+                            await axios.post(`${API_BASE_URL}/api/auth/mfa/toggle`, {}, { headers: { Authorization: `Bearer ${token}` } });
+                            const updatedUser = { ...user, mfaEnabled: false };
+                            setUser(updatedUser);
+                            localStorage.setItem("flowstate_user", JSON.stringify(updatedUser));
+                            setMfaStep("idle");
+                            setMfaMsg("2FA has been disabled.");
+                        }}
+                        className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-sm font-bold transition-colors"
+                    >
+                        Disable 2FA
+                    </button>
+                </div>
+            ) : mfaStep === "idle" ? (
+                <div className="space-y-3">
+                    <div className="flex gap-3">
+                        <input
+                            type="tel"
+                            placeholder="+91XXXXXXXXXX"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className="flex-1 bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm"
+                        />
+                        <button
+                            disabled={mfaLoading || !phoneNumber}
+                            onClick={async () => {
+                                setMfaLoading(true); setMfaMsg("");
+                                try {
+                                    const token = localStorage.getItem("flowstate_token");
+                                    await axios.post(`${API_BASE_URL}/api/auth/mfa/setup-phone`, { phoneNumber }, { headers: { Authorization: `Bearer ${token}` } });
+                                    setMfaStep("sent");
+                                    setMfaMsg("OTP sent! Check your phone.");
+                                } catch (err: any) {
+                                    setMfaMsg(err.response?.data?.message || "Failed to send OTP.");
+                                } finally { setMfaLoading(false); }
+                            }}
+                            className="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-sm flex items-center gap-2 disabled:opacity-50 transition-colors"
+                        >
+                            {mfaLoading ? <Loader2 size={16} className="animate-spin" /> : <Smartphone size={16} />} Send OTP
+                        </button>
+                    </div>
+                    {mfaMsg && <p className="text-sm text-red-400">{mfaMsg}</p>}
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    <p className="text-emerald-400 text-sm font-medium">{mfaMsg}</p>
+                    <div className="flex gap-3">
+                        <input
+                            type="text"
+                            placeholder="Enter 6-digit OTP"
+                            value={mfaOtp}
+                            maxLength={6}
+                            onChange={(e) => setMfaOtp(e.target.value)}
+                            className="flex-1 bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm tracking-widest font-mono"
+                        />
+                        <button
+                            disabled={mfaLoading || mfaOtp.length !== 6}
+                            onClick={async () => {
+                                setMfaLoading(true); setMfaMsg("");
+                                try {
+                                    const token = localStorage.getItem("flowstate_token");
+                                    const res = await axios.post(`${API_BASE_URL}/api/auth/mfa/confirm-phone`, { otp: mfaOtp }, { headers: { Authorization: `Bearer ${token}` } });
+                                    const updatedUser = { ...user, mfaEnabled: true, phoneNumber: res.data.phoneNumber };
+                                    setUser(updatedUser);
+                                    localStorage.setItem("flowstate_user", JSON.stringify(updatedUser));
+                                    setMfaStep("done");
+                                    setMfaMsg("2FA enabled successfully!");
+                                } catch (err: any) {
+                                    setMfaMsg(err.response?.data?.message || "Invalid OTP.");
+                                } finally { setMfaLoading(false); }
+                            }}
+                            className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm flex items-center gap-2 disabled:opacity-50 transition-colors"
+                        >
+                            {mfaLoading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Verify
+                        </button>
+                    </div>
+                    <button onClick={() => { setMfaStep("idle"); setMfaMsg(""); }} className="text-xs text-slate-500 hover:text-slate-300 underline">
+                        Use a different number
+                    </button>
+                </div>
+            )}
+        </section>
+
+        {/* SUBSCRIPTION & BILLING */}
+        <section className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-3xl p-5 md:p-8 backdrop-blur-md relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
+                <Zap size={100} className="text-indigo-300" />
+            </div>
+            <h2 className="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2 relative z-10">
+                <Zap size={20} className="text-indigo-400 fill-indigo-400" /> Subscription & Billing
+            </h2>
+            <p className="text-slate-300 text-sm md:text-base mb-6 relative z-10">
+                {user.isPremium 
+                    ? "You are currently on the FlowState Pro plan. Enjoy unlimited tasks and advanced analytics!" 
+                    : "Upgrade to FlowState Pro for unlimited tasks, premium themes, and priority support."}
+            </p>
+            
+            <div className="relative z-10">
+                {user.isPremium ? (
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl font-bold text-sm">
+                        <Check size={18} /> Pro Active
+                    </div>
+                ) : (
+                    <button 
+                        onClick={async () => {
+                            try {
+                                setLoading(true);
+                                const token = localStorage.getItem("flowstate_token");
+                                const res = await axios.post(`${API_BASE_URL}/api/payment/create-subscription`, {}, {
+                                    headers: { Authorization: `Bearer ${token}` }
+                                });
+                                const order = res.data; // Fixed: res.data IS the order
+
+                                const options = {
+                                    key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_dummy",
+                                    amount: order.amount,
+                                    currency: "INR",
+                                    name: "FlowState Pro",
+                                    description: "1-Year Premium Subscription",
+                                    order_id: order.id,
+                                    handler: async function (response: any) {
+                                        try {
+                                            const verifyRes = await axios.post(`${API_BASE_URL}/api/payment/verify`, response, {
+                                                headers: { Authorization: `Bearer ${token}` }
+                                            });
+                                            if (verifyRes.status === 200) {
+                                                const updatedUser = { ...user, isPremium: true };
+                                                setUser(updatedUser);
+                                                localStorage.setItem("flowstate_user", JSON.stringify(updatedUser));
+                                                alert("Successfully upgraded to Pro!");
+                                            }
+                                        } catch (err) {
+                                            alert("Payment verification failed.");
+                                        }
+                                    },
+                                    prefill: {
+                                        name: user.name,
+                                        email: user.email,
+                                    },
+                                    theme: {
+                                        color: "#4f46e5"
+                                    }
+                                };
+                                const rzp = new (window as any).Razorpay(options);
+                                rzp.open();
+                            } catch (err) {
+                                console.error(err);
+                                alert("Failed to initiate payment. Please try again.");
+                            } finally {
+                                setLoading(false);
+                            }
+                        }}
+                        disabled={loading}
+                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {loading ? <Loader2 size={18} className="animate-spin"/> : <Zap size={18} className="fill-white"/>} 
+                        Upgrade to Pro (₹999/yr)
+                    </button>
+                )}
             </div>
         </section>
 

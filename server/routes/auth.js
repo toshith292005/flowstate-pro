@@ -1,9 +1,14 @@
 const router = require("express").Router();
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const twilio = require("twilio");
 const User = require("../models/User");
+
+// Twilio Verify client
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
 
 // ==========================================
 // 1. STANDARD AUTH ROUTES (Login/Register)
@@ -66,6 +71,25 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+    // 🚀 MFA Check (Twilio SMS OTP)
+    if (user.mfaEnabled) {
+      if (!user.phoneNumber) {
+        return res.status(400).json({ message: "MFA enabled but no phone number on file. Please add one in Settings." });
+      }
+
+      // Send OTP via Twilio Verify
+      try {
+        await twilioClient.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+          .verifications.create({ to: user.phoneNumber, channel: "sms" });
+      } catch (err) {
+        console.error("Twilio Error:", err);
+        return res.status(500).json({ message: "Failed to send OTP. Please try again." });
+      }
+
+      const tempToken = jwt.sign({ id: user._id, mfaTemp: true }, process.env.JWT_SECRET, { expiresIn: "10m" });
+      return res.json({ mfaRequired: true, tempToken, message: "OTP sent to your registered mobile number" });
+    }
+
     // Create Token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
@@ -75,7 +99,8 @@ router.post("/login", async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        photo: user.photo
+        photo: user.photo,
+        mfaEnabled: user.mfaEnabled
       }
     });
   } catch (err) {
@@ -84,20 +109,19 @@ router.post("/login", async (req, res) => {
 });
 
 // ==========================================
-// 2. FORGOT PASSWORD ROUTES
+// 2. FORGOT PASSWORD & EMAIL TRANSPORTER
 // ==========================================
 
-// 🚀 CRITICAL FIX FOR RENDER TIMEOUTS
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,               // 👈 CHANGE THIS: Use 587 instead of 465
-  secure: false,           // 👈 CHANGE THIS: Must be false for port 587
+  port: 587,               // Use 587 instead of 465
+  secure: false,           // Must be false for port 587
   auth: {
     user: process.env.EMAIL_USERNAME,
     pass: process.env.EMAIL_PASSWORD,
   },
   tls: {
-    rejectUnauthorized: false // 👈 Helps avoid SSL errors in some cloud environments
+    rejectUnauthorized: false
   }
 });
 
@@ -169,6 +193,128 @@ router.post("/reset-password/:token", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ==========================================
+// 3. MFA ROUTES (TWILIO SMS OTP)
+// ==========================================
+
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "No token provided" });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+};
+
+// Save phone number & enable MFA
+router.post("/mfa/setup-phone", verifyToken, async (req, res) => {
+  try {
+    let { phoneNumber } = req.body;
+    if (!phoneNumber) return res.status(400).json({ message: "Phone number required" });
+
+    // Format for Twilio (E.164)
+    if (!phoneNumber.startsWith("+")) {
+      phoneNumber = "+" + phoneNumber;
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Send verification OTP to confirm the phone number
+    await twilioClient.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+      .verifications.create({ to: phoneNumber, channel: "sms" });
+
+    // Save phone number temporarily (confirm before enabling MFA)
+    user.phoneNumber = phoneNumber;
+    await user.save();
+
+    res.json({ message: "OTP sent to your phone number. Please verify to enable MFA." });
+  } catch (err) {
+    console.error("Twilio Setup Error:", err);
+    res.status(500).json({ message: "Failed to send OTP. Please ensure you include your country code (e.g. +91)." });
+  }
+});
+
+// Confirm phone OTP and enable MFA
+router.post("/mfa/confirm-phone", verifyToken, async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user || !user.phoneNumber) return res.status(400).json({ message: "No phone number on file" });
+
+    const result = await twilioClient.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+      .verificationChecks.create({ to: user.phoneNumber, code: otp });
+
+    if (result.status === "approved") {
+      user.mfaEnabled = true;
+      await user.save();
+      res.json({ message: "MFA enabled successfully!", mfaEnabled: true, phoneNumber: user.phoneNumber });
+    } else {
+      res.status(400).json({ message: "Invalid OTP. Please try again." });
+    }
+  } catch (err) {
+    console.error("Twilio Confirm Error:", err);
+    res.status(500).json({ message: "Verification failed" });
+  }
+});
+
+// Toggle MFA Off
+router.post("/mfa/toggle", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.mfaEnabled = !user.mfaEnabled;
+    await user.save();
+
+    res.json({ message: `MFA ${user.mfaEnabled ? 'enabled' : 'disabled'}`, mfaEnabled: user.mfaEnabled });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Verify SMS OTP during login
+router.post("/mfa/verify-login", async (req, res) => {
+  try {
+    const { tempToken, mfaToken } = req.body;
+
+    const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+    if (!decoded.mfaTemp) return res.status(400).json({ message: "Invalid temporary token" });
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Verify OTP with Twilio
+    const result = await twilioClient.verify.v2.services(process.env.TWILIO_VERIFY_SID)
+      .verificationChecks.create({ to: user.phoneNumber, code: mfaToken });
+
+    if (result.status !== "approved") {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+    res.json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        photo: user.photo,
+        isPremium: user.isPremium,
+        mfaEnabled: user.mfaEnabled,
+        phoneNumber: user.phoneNumber
+      }
+    });
+  } catch (err) {
+    console.error("Twilio Verify Login Error:", err);
+    res.status(401).json({ message: "Invalid or expired token" });
   }
 });
 

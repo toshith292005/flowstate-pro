@@ -13,6 +13,10 @@ const UserSchema = new mongoose.Schema({
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
 
+  mfaEnabled: { type: Boolean, default: false },
+  mfaSecret: { type: String },
+  phoneNumber: { type: String, default: null },
+
   isPremium: {
     type: Boolean,
     default: false

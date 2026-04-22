@@ -6,6 +6,7 @@ const passport = require('passport');
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const jwt = require("jsonwebtoken");
 const User = require("./models/User");
+const { connectRedis } = require("./config/redis");
 
 const app = express();
 
@@ -14,10 +15,12 @@ const app = express();
 // preventing the "redirect_uri_mismatch" error.
 app.set('trust proxy', 1); 
 
-// --- 1. DATABASE CONNECTION ---
+// --- 1. DATABASE CONNECTIONS ---
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected Successfully"))
   .catch((err) => console.error("❌ MongoDB Connection Error:", err));
+
+connectRedis();
 
 // --- 2. MIDDLEWARE ---
 app.use(cors({
@@ -91,9 +94,11 @@ app.get(
 // --- 5. OTHER ROUTES ---
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks'); 
+const paymentRoutes = require('./routes/payment');
 
 app.use('/api/auth', authRoutes); 
 app.use('/api/tasks', taskRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Health Check
 app.get('/', (req, res) => res.send("FlowState API Live"));

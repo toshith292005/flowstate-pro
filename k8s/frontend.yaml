@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flowstate-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flowstate-frontend
+  template:
+    metadata:
+      labels:
+        app: flowstate-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: toshith2005/flowstate-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: flowstate-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

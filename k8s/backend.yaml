@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flowstate-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flowstate-backend
+  template:
+    metadata:
+      labels:
+        app: flowstate-backend
+    spec:
+      containers:
+      - name: backend
+        image: toshith2005/flowstate-backend:latest
+        ports:
+        - containerPort: 5000
+        envFrom:
+        - secretRef:
+            name: backend-secrets
+        env:
+        - name: REDIS_URI
+          value: "redis://redis-service:6379"
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: flowstate-backend
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
