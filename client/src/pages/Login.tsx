@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, AlertCircle, Eye, EyeOff, Loader2, Zap, ArrowLeft, Sun, Moon } from "lucide-react";
-import { useTheme } from "../context/ThemeContext";
+import { Mail, Lock, AlertCircle, Eye, EyeOff, Loader2, Zap, ArrowLeft } from "lucide-react";
 import axios from "axios";
 
 // 🚀 Use Environment Variable
@@ -9,7 +8,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { isDark, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -61,38 +59,29 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-4 md:p-6 relative bg-slate-50 dark:bg-black overflow-hidden transition-colors duration-300">
-      
-      {/* THEME TOGGLE */}
-      <button 
-        onClick={toggleTheme}
-        className="fixed top-6 right-6 z-[60] p-3 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white shadow-lg backdrop-blur-xl transition-all active:scale-90"
-        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-      >
-        {isDark ? <Sun size={20} /> : <Moon size={20} />}
-      </button>
+    <div className="min-h-[100dvh] w-full font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-4 md:p-6 relative bg-black overflow-hidden">
       
       {/* BACKGROUND AMBIENCE */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/5 dark:bg-indigo-900/20 blur-[120px]"></div>
-         <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-600/5 dark:bg-violet-900/20 blur-[120px]"></div>
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] dark:opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px]"></div>
+         <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-900/20 blur-[120px]"></div>
+         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
       </div>
 
-      <div className="w-full max-w-md bg-white dark:bg-white/5 backdrop-blur-xl rounded-3xl shadow-xl dark:shadow-2xl p-6 md:p-10 space-y-6 border border-slate-200 dark:border-white/10 relative z-10">
+      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-10 space-y-6 border border-white/10 relative z-10">
         
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/30 mb-6">
              <Zap size={24} className="text-white fill-white" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Welcome Back</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base mt-2">Sign in to continue to FlowState</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Welcome Back</h1>
+          <p className="text-slate-400 text-sm md:text-base mt-2">Sign in to continue to FlowState</p>
         </div>
 
         {/* 🚀 CRITICAL FIX: Added '/api' to match server/index.js */}
         <a 
           href={`${API_BASE_URL}/api/auth/google`} 
-          className="w-full bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white font-medium h-12 rounded-xl transition-all border border-slate-200 dark:border-white/10 flex items-center justify-center gap-3 active:scale-95 cursor-pointer no-underline group"
+          className="w-full bg-white/5 hover:bg-white/10 text-white font-medium h-12 rounded-xl transition-all border border-white/10 flex items-center justify-center gap-3 active:scale-95 cursor-pointer no-underline group"
         >
            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -104,9 +93,9 @@ export default function Login() {
         </a>
 
         <div className="relative flex items-center py-2">
-          <div className="flex-grow border-t border-slate-200 dark:border-white/10"></div>
-          <span className="flex-shrink-0 mx-4 text-xs text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">Or continue with email</span>
-          <div className="flex-grow border-t border-slate-200 dark:border-white/10"></div>
+          <div className="flex-grow border-t border-white/10"></div>
+          <span className="flex-shrink-0 mx-4 text-xs text-slate-500 font-semibold uppercase tracking-wider">Or continue with email</span>
+          <div className="flex-grow border-t border-white/10"></div>
         </div>
 
         {error && (
@@ -118,9 +107,9 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="space-y-2">
-            <label htmlFor="email" className="text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-300 ml-1">Email</label>
+            <label htmlFor="email" className="text-xs md:text-sm font-semibold text-slate-300 ml-1">Email</label>
             <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 transition-colors" size={20} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
               <input 
                 id="email"
                 name="email"
@@ -130,7 +119,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com" 
-                className="w-full pl-11 pr-4 h-12 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base font-medium" 
+                className="w-full pl-11 pr-4 h-12 rounded-xl border border-white/10 bg-black/40 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base font-medium" 
                 required
               />
             </div>
@@ -138,11 +127,11 @@ export default function Login() {
 
           <div className="space-y-2">
             <div className="flex justify-between items-center ml-1">
-               <label htmlFor="password" className="text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-300">Password</label>
-               <Link to="/forgot-password" className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors font-medium p-1">Forgot password?</Link>
+               <label htmlFor="password" className="text-xs md:text-sm font-semibold text-slate-300">Password</label>
+               <Link to="/forgot-password" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium p-1">Forgot password?</Link>
             </div>
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 transition-colors" size={20} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
               <input 
                 id="password"
                 name="password"
@@ -151,13 +140,13 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••" 
-                className="w-full pl-11 pr-12 h-12 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base font-medium" 
+                className="w-full pl-11 pr-12 h-12 rounded-xl border border-white/10 bg-black/40 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-base font-medium" 
                 required
               />
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white p-2"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white p-2"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -166,9 +155,9 @@ export default function Login() {
 
           {mfaRequired && (
             <div className="space-y-2">
-              <label htmlFor="mfaToken" className="text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-300 ml-1">MFA Code</label>
+              <label htmlFor="mfaToken" className="text-xs md:text-sm font-semibold text-slate-300 ml-1">MFA Code</label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 transition-colors" size={20} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
                 <input 
                   id="mfaToken"
                   name="mfaToken"
@@ -176,7 +165,7 @@ export default function Login() {
                   value={mfaToken}
                   onChange={(e) => setMfaToken(e.target.value)}
                   placeholder="123456" 
-                  className="w-full pl-11 pr-4 h-12 rounded-xl border border-indigo-500/50 bg-slate-50 dark:bg-black/40 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-base font-medium" 
+                  className="w-full pl-11 pr-4 h-12 rounded-xl border border-indigo-500/50 bg-black/40 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-base font-medium" 
                   required
                 />
               </div>
@@ -193,10 +182,10 @@ export default function Login() {
         </form>
 
         <div className="space-y-4 text-center pt-2">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Don't have an account? <Link to="/signup" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:text-indigo-500 dark:hover:text-indigo-300 hover:underline p-1">Sign up</Link>
+          <p className="text-sm text-slate-400">
+            Don't have an account? <Link to="/signup" className="text-indigo-400 font-semibold hover:text-indigo-300 hover:underline p-1">Sign up</Link>
           </p>
-          <Link to="/" className="inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors p-2">
+          <Link to="/" className="inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-300 transition-colors p-2">
             <ArrowLeft size={16} /> Back to Home
           </Link>
         </div>

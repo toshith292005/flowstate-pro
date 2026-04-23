@@ -36,9 +36,9 @@ export default function LoginSuccess() {
   }, [searchParams]);
 
   return (
-    <div className="h-[100dvh] w-full bg-slate-50 dark:bg-black flex flex-col items-center justify-center text-slate-900 dark:text-white space-y-4 transition-colors">
+    <div className="h-[100dvh] w-full bg-black flex flex-col items-center justify-center text-white space-y-4">
       <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
-      <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse text-sm">
+      <p className="text-slate-400 font-medium animate-pulse text-sm">
         Finalizing secure login...
       </p>
     </div>

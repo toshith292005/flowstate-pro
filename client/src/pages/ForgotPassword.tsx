@@ -30,24 +30,24 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-4 relative bg-slate-50 dark:bg-black overflow-hidden transition-colors duration-300">
+    <div className="min-h-[100dvh] w-full font-sans selection:bg-indigo-500 selection:text-white flex items-center justify-center p-4 relative bg-black overflow-hidden">
       
       {/* BACKGROUND AMBIENCE */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/5 dark:bg-indigo-900/20 blur-[120px]"></div>
-         <div className="absolute bottom-[10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-600/5 dark:bg-emerald-900/10 blur-[120px]"></div>
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] dark:opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px]"></div>
+         <div className="absolute bottom-[10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-900/10 blur-[120px]"></div>
+         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
       </div>
 
       {/* CARD */}
-      <div className="w-full max-w-md bg-white dark:bg-white/5 backdrop-blur-xl rounded-3xl shadow-xl dark:shadow-2xl p-8 border border-slate-200 dark:border-white/10 relative z-10">
+      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/10 relative z-10">
         
         <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/30 mb-4">
                 <Zap size={24} className="text-white fill-white" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Reset Password</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">Enter your email to receive recovery instructions</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Reset Password</h1>
+            <p className="text-slate-400 mt-2 text-sm">Enter your email to receive recovery instructions</p>
         </div>
 
         {status === "success" ? (
@@ -55,8 +55,8 @@ export default function ForgotPassword() {
             <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3">
               <CheckCircle2 size={24} />
             </div>
-            <h3 className="text-emerald-600 dark:text-emerald-400 font-bold mb-1">Check your mail</h3>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">{message}</p>
+            <h3 className="text-emerald-400 font-bold mb-1">Check your mail</h3>
+            <p className="text-slate-400 text-sm mb-4">{message}</p>
             <Link to="/login" className="text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 py-2.5 px-4 rounded-xl transition-colors inline-block w-full">
               Back to Sign In
             </Link>
@@ -77,7 +77,7 @@ export default function ForgotPassword() {
                   type="email" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
-                  className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-medium"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-all font-medium"
                   placeholder="you@example.com"
                   required
                 />
@@ -95,7 +95,7 @@ export default function ForgotPassword() {
         )}
 
         <div className="mt-8 text-center">
-          <Link to="/login" className="inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors p-2">
+          <Link to="/login" className="inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-300 transition-colors p-2">
             <ArrowLeft size={16} /> Back to Sign In
           </Link>
         </div>
