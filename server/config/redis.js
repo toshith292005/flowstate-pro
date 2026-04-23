@@ -1,12 +1,19 @@
 const { createClient } = require('redis');
 
-const redisClient = createClient({
-  url: process.env.REDIS_URI || 'redis://localhost:6379'
-});
+// Only create the client if we have a URI to avoid localhost connection errors in production
+const redisClient = process.env.REDIS_URI 
+  ? createClient({ url: process.env.REDIS_URI }) 
+  : null;
 
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
+if (redisClient) {
+  redisClient.on('error', (err) => console.error('Redis Client Error', err));
+}
 
 const connectRedis = async () => {
+  if (!redisClient) {
+    console.log('⚠️ Redis URI not found. Skipping Redis connection.');
+    return;
+  }
   try {
     await redisClient.connect();
     console.log('✅ Redis Connected Successfully');
