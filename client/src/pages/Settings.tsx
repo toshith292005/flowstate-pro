@@ -33,6 +33,12 @@ export default function Settings() {
   const [mfaLoading, setMfaLoading] = useState(false);
   const [mfaMsg, setMfaMsg] = useState("");
 
+  // CHANGE PASSWORD STATE
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwMsg, setPwMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
     localStorage.setItem("flowstate_settings", JSON.stringify(settings));
@@ -107,6 +113,32 @@ export default function Settings() {
   const getInitials = (name: string) => {
     if (!name) return "??";
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
+  };
+
+  const handleChangePassword = async () => {
+    setPwMsg(null);
+    if (!pwCurrent || !pwNew || !pwConfirm) {
+      return setPwMsg({ text: "All fields are required.", type: "error" });
+    }
+    if (pwNew !== pwConfirm) {
+      return setPwMsg({ text: "New passwords do not match.", type: "error" });
+    }
+    if (pwNew.length < 8) {
+      return setPwMsg({ text: "New password must be at least 8 characters.", type: "error" });
+    }
+    setPwLoading(true);
+    try {
+      const token = localStorage.getItem("flowstate_token");
+      await axios.post(`${API_BASE_URL}/api/user/password`, { currentPassword: pwCurrent, newPassword: pwNew }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPwMsg({ text: "Password updated successfully!", type: "success" });
+      setPwCurrent(""); setPwNew(""); setPwConfirm("");
+    } catch (err: any) {
+      setPwMsg({ text: err.response?.data?.message || "Failed to update password.", type: "error" });
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   // HANDLE FILE SELECTION FROM GALLERY/EXPLORER
@@ -364,6 +396,50 @@ export default function Settings() {
                     </button>
                 </div>
             )}
+        </section>
+
+        {/* CHANGE PASSWORD */}
+        <section className="bg-white/5 border border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-md">
+            <h2 className="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <Lock size={20} className="text-indigo-400" /> Change Password
+            </h2>
+            <p className="text-slate-400 text-sm mb-6">Update your login password. Must be at least 8 characters.</p>
+            <div className="space-y-3 max-w-md">
+                <input
+                    type="password"
+                    placeholder="Current Password"
+                    value={pwCurrent}
+                    onChange={(e) => setPwCurrent(e.target.value)}
+                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
+                />
+                <input
+                    type="password"
+                    placeholder="New Password"
+                    value={pwNew}
+                    onChange={(e) => setPwNew(e.target.value)}
+                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
+                />
+                <input
+                    type="password"
+                    placeholder="Confirm New Password"
+                    value={pwConfirm}
+                    onChange={(e) => setPwConfirm(e.target.value)}
+                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
+                />
+                {pwMsg && (
+                    <p className={`text-sm font-medium ${pwMsg.type === "success" ? "text-emerald-400" : "text-red-400"}`}>
+                        {pwMsg.text}
+                    </p>
+                )}
+                <button
+                    onClick={handleChangePassword}
+                    disabled={pwLoading}
+                    className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-sm transition-colors disabled:opacity-50 active:scale-95"
+                >
+                    {pwLoading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                    Update Password
+                </button>
+            </div>
         </section>
 
         {/* SUBSCRIPTION & BILLING */}

@@ -19,6 +19,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Premium = lazy(() => import("./pages/Premium"));
 
 // 3. LOADING SCREEN (Optimized for dark mode and mobile)
 function LoadingScreen() {
@@ -70,6 +71,7 @@ function App() {
             <Route path="/analytics" element={<AuthenticatedPage><Analytics /></AuthenticatedPage>} />
             <Route path="/calendar" element={<AuthenticatedPage><Calendar /></AuthenticatedPage>} />
             <Route path="/settings" element={<AuthenticatedPage><Settings /></AuthenticatedPage>} />
+            <Route path="/premium" element={<AuthenticatedPage><Premium /></AuthenticatedPage>} />
             
             {/* Catch-all: Safety redirect for invalid URLs */}
             <Route path="*" element={<Navigate to="/" replace />} />

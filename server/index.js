@@ -95,10 +95,12 @@ app.get(
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks'); 
 const paymentRoutes = require('./routes/payment');
+const userRoutes = require('./routes/user');
 
 app.use('/api/auth', authRoutes); 
 app.use('/api/tasks', taskRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/user', userRoutes);
 
 // Health Check
 app.get('/', (req, res) => res.send("FlowState API Live"));

@@ -89,7 +89,7 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           {!user.isPremium ? (
             <Link 
-              to="/settings" 
+              to="/premium" 
               className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95"
             >
               <Zap size={16} className="fill-white" /> <span className="hidden lg:block">Upgrade to Pro</span>
