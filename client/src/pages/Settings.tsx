@@ -159,13 +159,13 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-white font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden transition-colors duration-300">
       
       {/* 1. BACKGROUND AMBIENCE */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-         <div className="absolute top-[-10%] left-[20%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px]"></div>
-         <div className="absolute bottom-[10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-900/10 blur-[120px]"></div>
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+         <div className="absolute top-[-10%] left-[20%] w-[50%] h-[50%] rounded-full bg-indigo-600/5 dark:bg-indigo-900/10 blur-[120px]"></div>
+         <div className="absolute bottom-[10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-600/5 dark:bg-emerald-900/10 blur-[120px]"></div>
+         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] dark:opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
       </div>
 
       {/* Main Content */}
@@ -173,17 +173,17 @@ export default function Settings() {
         
         {/* HEADER */}
         <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Settings</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Settings</h1>
         </div>
 
         {/* ACCOUNT CARD */}
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-5 md:p-8 relative overflow-hidden transition-all duration-300 backdrop-blur-md">
+        <section className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-5 md:p-8 relative overflow-hidden transition-all duration-300 backdrop-blur-md shadow-sm dark:shadow-none">
             <div className="flex justify-between items-start mb-6 relative z-10">
-                <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
-                    <User size={20} className="text-indigo-400" /> Account
+                <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <User size={20} className="text-indigo-600 dark:text-indigo-400" /> Account
                 </h2>
                 {!isEditing ? (
-                    <button onClick={() => setIsEditing(true)} className="p-2 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg transition-colors active:scale-95">
+                    <button onClick={() => setIsEditing(true)} className="p-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 rounded-lg transition-colors active:scale-95">
                     <Edit2 size={18} />
                     </button>
                 ) : (
@@ -200,7 +200,7 @@ export default function Settings() {
             
             <div className="flex flex-col md:flex-row items-center gap-6 mb-2 relative z-10">
                 <div className="relative group shrink-0">
-                    <div className="h-24 w-24 md:h-28 md:w-28 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-bold border-4 border-black/50 shadow-xl overflow-hidden relative">
+                    <div className="h-24 w-24 md:h-28 md:w-28 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-bold border-4 border-white dark:border-black/50 shadow-xl overflow-hidden relative">
                     {(isEditing ? tempPhoto : user.photo) ? (
                         <img src={(isEditing ? tempPhoto : user.photo) as string} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -220,7 +220,7 @@ export default function Settings() {
                             />
                             <button 
                                 onClick={handleUploadClick} 
-                                className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full border-2 border-black text-white shadow-lg hover:bg-indigo-500 transition-colors active:scale-95"
+                                className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full border-2 border-white dark:border-black text-white shadow-lg hover:bg-indigo-500 transition-colors active:scale-95"
                                 title="Upload from Gallery"
                             >
                                 <Camera size={14} />
@@ -239,16 +239,16 @@ export default function Settings() {
                                 value={tempName} 
                                 onChange={(e) => setTempName(e.target.value)} 
                                 placeholder="Your Name" 
-                                className="block w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-indigo-500 transition-all text-base" 
+                                className="block w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-indigo-500 transition-all text-base" 
                             />
                         </div>
                         {/* URL INPUT REMOVED - Only Gallery Upload is used now */}
                         {tempPhoto && (
                             <div>
                                 <label className="text-xs font-bold text-slate-500 ml-1 uppercase block mb-1">Profile Picture</label>
-                                <div className="flex items-center justify-between bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-slate-300">
+                                <div className="flex items-center justify-between bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-slate-600 dark:text-slate-300">
                                     <span className="text-sm truncate">Image Selected</span>
-                                    <button onClick={handleDeletePhoto} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-lg transition-colors active:scale-95 shrink-0">
+                                    <button onClick={handleDeletePhoto} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-500 border border-red-500/20 rounded-lg transition-colors active:scale-95 shrink-0">
                                         <Trash2 size={18} />
                                     </button>
                                 </div>
@@ -256,36 +256,36 @@ export default function Settings() {
                         )}
                     </div>
                     ) : (
-                    <div className="space-y-1">
-                        <h3 className="text-2xl md:text-3xl font-bold text-white">{user.name || "Guest User"}</h3>
-                        <p className="text-slate-400 text-sm md:text-base break-all">{user.email || "No email linked"}</p>
-                    </div>
+                     <div className="space-y-1">
+                        <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{user.name || "Guest User"}</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base break-all">{user.email || "No email linked"}</p>
+                     </div>
                     )}
                 </div>
             </div>
         </section>
 
         {/* NOTIFICATIONS */}
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-md">
-            <h2 className="text-lg md:text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Bell size={20} className="text-indigo-400" /> Notifications
+        <section className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-md shadow-sm dark:shadow-none">
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+            <Bell size={20} className="text-indigo-600 dark:text-indigo-400" /> Notifications
             </h2>
             <div className="space-y-2">
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 hover:bg-black/40 transition-colors cursor-pointer active:scale-[0.99]" onClick={() => toggleNotification('taskReminders')}>
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-black/20 hover:bg-slate-100 dark:hover:bg-black/40 transition-colors cursor-pointer active:scale-[0.99]" onClick={() => toggleNotification('taskReminders')}>
                 <div className="pr-4">
-                <p className="text-white font-medium text-sm md:text-base">Task Reminders</p>
-                <p className="text-xs md:text-sm text-slate-500">Get notified 1 hour before due date</p>
+                <p className="text-slate-900 dark:text-white font-medium text-sm md:text-base">Task Reminders</p>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-500">Get notified 1 hour before due date</p>
                 </div>
-                <div className={`w-12 h-7 rounded-full relative transition-colors shrink-0 ${settings.taskReminders ? "bg-indigo-600" : "bg-slate-700"}`}>
+                <div className={`w-12 h-7 rounded-full relative transition-colors shrink-0 ${settings.taskReminders ? "bg-indigo-600" : "bg-slate-300 dark:bg-slate-700"}`}>
                 <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-md ${settings.taskReminders ? "right-1" : "left-1"}`}></div>
                 </div>
             </div>
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 hover:bg-black/40 transition-colors cursor-pointer active:scale-[0.99]" onClick={() => toggleNotification('weeklySummary')}>
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-black/20 hover:bg-slate-100 dark:hover:bg-black/40 transition-colors cursor-pointer active:scale-[0.99]" onClick={() => toggleNotification('weeklySummary')}>
                 <div className="pr-4">
-                <p className="text-white font-medium text-sm md:text-base">Weekly Summary</p>
-                <p className="text-xs md:text-sm text-slate-500">Receive a weekly productivity report</p>
+                <p className="text-slate-900 dark:text-white font-medium text-sm md:text-base">Weekly Summary</p>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-500">Receive a weekly productivity report</p>
                 </div>
-                <div className={`w-12 h-7 rounded-full relative transition-colors shrink-0 ${settings.weeklySummary ? "bg-indigo-600" : "bg-slate-700"}`}>
+                <div className={`w-12 h-7 rounded-full relative transition-colors shrink-0 ${settings.weeklySummary ? "bg-indigo-600" : "bg-slate-300 dark:bg-slate-700"}`}>
                 <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-md ${settings.weeklySummary ? "right-1" : "left-1"}`}></div>
                 </div>
             </div>
@@ -293,21 +293,21 @@ export default function Settings() {
         </section>
 
         {/* SECURITY / MFA */}
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-md">
-            <h2 className="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2">
-                <Lock size={20} className="text-indigo-400" /> Two-Factor Authentication
+        <section className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-md shadow-sm dark:shadow-none">
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                <Lock size={20} className="text-indigo-600 dark:text-indigo-400" /> Two-Factor Authentication
             </h2>
-            <p className="text-slate-400 text-sm mb-6">
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
                 Add your mobile number to receive a one-time SMS code each time you log in.
             </p>
 
             {mfaStep === "done" ? (
                 <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                        <Smartphone size={20} className="text-emerald-400 shrink-0" />
+                    <div className="flex items-center gap-3 p-4 bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 rounded-2xl">
+                        <Smartphone size={20} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <div>
-                            <p className="text-white font-bold text-sm">2FA Active</p>
-                            <p className="text-slate-400 text-xs">{user.phoneNumber || phoneNumber}</p>
+                            <p className="text-slate-900 dark:text-white font-bold text-sm">2FA Active</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs">{user.phoneNumber || phoneNumber}</p>
                         </div>
                         <div className="ml-auto">
                             <Check size={18} className="text-emerald-400" />
@@ -336,7 +336,7 @@ export default function Settings() {
                             placeholder="+91XXXXXXXXXX"
                             value={phoneNumber}
                             onChange={(e) => setPhoneNumber(e.target.value)}
-                            className="flex-1 bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm"
+                            className="flex-1 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 text-sm"
                         />
                         <button
                             disabled={mfaLoading || !phoneNumber}
@@ -368,7 +368,7 @@ export default function Settings() {
                             value={mfaOtp}
                             maxLength={6}
                             onChange={(e) => setMfaOtp(e.target.value)}
-                            className="flex-1 bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm tracking-widest font-mono"
+                            className="flex-1 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 text-sm tracking-widest font-mono"
                         />
                         <button
                             disabled={mfaLoading || mfaOtp.length !== 6}
@@ -399,32 +399,32 @@ export default function Settings() {
         </section>
 
         {/* CHANGE PASSWORD */}
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-md">
-            <h2 className="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2">
-                <Lock size={20} className="text-indigo-400" /> Change Password
+        <section className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-md shadow-sm dark:shadow-none">
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                <Lock size={20} className="text-indigo-600 dark:text-indigo-400" /> Change Password
             </h2>
-            <p className="text-slate-400 text-sm mb-6">Update your login password. Must be at least 8 characters.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Update your login password. Must be at least 8 characters.</p>
             <div className="space-y-3 max-w-md">
                 <input
                     type="password"
                     placeholder="Current Password"
                     value={pwCurrent}
                     onChange={(e) => setPwCurrent(e.target.value)}
-                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
+                    className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-400 dark:placeholder-slate-600"
                 />
                 <input
                     type="password"
                     placeholder="New Password"
                     value={pwNew}
                     onChange={(e) => setPwNew(e.target.value)}
-                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
+                    className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-400 dark:placeholder-slate-600"
                 />
                 <input
                     type="password"
                     placeholder="Confirm New Password"
                     value={pwConfirm}
                     onChange={(e) => setPwConfirm(e.target.value)}
-                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
+                    className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-400 dark:placeholder-slate-600"
                 />
                 {pwMsg && (
                     <p className={`text-sm font-medium ${pwMsg.type === "success" ? "text-emerald-400" : "text-red-400"}`}>
@@ -445,10 +445,10 @@ export default function Settings() {
         {/* SUBSCRIPTION & BILLING */}
         <section className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-3xl p-5 md:p-8 backdrop-blur-md relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
-                <Zap size={100} className="text-indigo-300" />
+                <Zap size={100} className="text-white dark:text-indigo-300" />
             </div>
             <h2 className="text-lg md:text-xl font-bold text-white mb-2 flex items-center gap-2 relative z-10">
-                <Zap size={20} className="text-indigo-400 fill-indigo-400" /> Subscription & Billing
+                <Zap size={20} className="text-white dark:text-indigo-400 fill-white dark:fill-indigo-400" /> Subscription & Billing
             </h2>
             <p className="text-slate-300 text-sm md:text-base mb-6 relative z-10">
                 {user.isPremium 
@@ -458,7 +458,7 @@ export default function Settings() {
             
             <div className="relative z-10">
                 {user.isPremium ? (
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl font-bold text-sm">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 dark:bg-emerald-500/20 text-white dark:text-emerald-400 border border-white/30 dark:border-emerald-500/30 rounded-xl font-bold text-sm">
                         <Check size={18} /> Pro Active
                     </div>
                 ) : (
@@ -522,16 +522,16 @@ export default function Settings() {
         </section>
 
         {/* DANGER ZONE */}
-        <section className="border border-red-500/20 bg-red-500/5 rounded-3xl p-5 md:p-8 backdrop-blur-md">
-            <h2 className="text-lg md:text-xl font-bold text-red-500 mb-6 flex items-center gap-2">
+        <section className="border border-red-500/20 bg-red-50 dark:bg-red-500/5 rounded-3xl p-5 md:p-8 backdrop-blur-md shadow-sm dark:shadow-none">
+            <h2 className="text-lg md:text-xl font-bold text-red-600 dark:text-red-500 mb-6 flex items-center gap-2">
             <Shield size={20} /> Danger Zone
             </h2>
             
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <p className="text-white font-medium text-sm md:text-base">Clear All Data</p>
-                        <p className="text-xs md:text-sm text-slate-500">Permanently delete all tasks and local history.</p>
+                        <p className="text-slate-900 dark:text-white font-medium text-sm md:text-base">Clear All Data</p>
+                        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-500">Permanently delete all tasks and local history.</p>
                     </div>
                     <button onClick={handleResetData} className="w-full md:w-auto px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2 active:scale-95">
                         <Trash2 size={18} /> Reset Data
@@ -542,10 +542,10 @@ export default function Settings() {
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <p className="text-white font-medium text-sm md:text-base">Sign Out</p>
-                        <p className="text-xs md:text-sm text-slate-500">Log out of your account on this device.</p>
+                        <p className="text-slate-900 dark:text-white font-medium text-sm md:text-base">Sign Out</p>
+                        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-500">Log out of your account on this device.</p>
                     </div>
-                    <button onClick={handleLogout} className="w-full md:w-auto px-4 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2 active:scale-95">
+                    <button onClick={handleLogout} className="w-full md:w-auto px-4 py-3 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2 active:scale-95">
                         <LogOut size={18} /> Logout
                     </button>
                 </div>

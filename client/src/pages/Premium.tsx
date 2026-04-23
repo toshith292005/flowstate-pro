@@ -70,13 +70,13 @@ export default function Premium() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-white font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden transition-colors duration-300">
       
       {/* BACKGROUND */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[10%] w-[70%] h-[70%] rounded-full bg-indigo-900/20 blur-[150px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/20 blur-[120px]" />
-        <div className="absolute top-[30%] left-[-5%] w-[30%] h-[30%] rounded-full bg-violet-800/10 blur-[100px]" />
+        <div className="absolute top-[-20%] left-[10%] w-[70%] h-[70%] rounded-full bg-indigo-600/5 dark:bg-indigo-900/20 blur-[150px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/5 dark:bg-purple-900/20 blur-[120px]" />
+        <div className="absolute top-[30%] left-[-5%] w-[30%] h-[30%] rounded-full bg-violet-500/5 dark:bg-violet-800/10 blur-[100px]" />
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-12 md:py-20">
@@ -84,7 +84,7 @@ export default function Premium() {
         {/* BACK BUTTON */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-10 group"
+          className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-10 group"
         >
           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm font-medium">Back</span>
@@ -92,22 +92,22 @@ export default function Premium() {
 
         {/* HEADER */}
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded-full text-indigo-400 text-sm font-bold mb-6">
-            <Zap size={14} className="fill-indigo-400" /> Limited Time Offer
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/30 rounded-full text-indigo-600 dark:text-indigo-400 text-sm font-bold mb-6">
+            <Zap size={14} className="fill-indigo-600 dark:fill-indigo-400" /> Limited Time Offer
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 text-slate-900 dark:text-white">
             Unlock{" "}
-            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
               FlowState Pro
             </span>
           </h1>
-          <p className="text-slate-400 text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
             Take your productivity to the next level. Everything you need, unlimited.
           </p>
         </div>
 
         {/* PRICING CARD */}
-        <div className="relative bg-gradient-to-b from-indigo-900/30 to-purple-900/20 border border-indigo-500/30 rounded-3xl p-8 md:p-12 backdrop-blur-md overflow-hidden mb-8">
+        <div className="relative bg-white dark:bg-gradient-to-b dark:from-indigo-900/30 dark:to-purple-900/20 border border-slate-200 dark:border-indigo-500/30 rounded-3xl p-8 md:p-12 backdrop-blur-md overflow-hidden mb-8 shadow-xl dark:shadow-none">
           {/* Glow orb inside card */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -116,28 +116,28 @@ export default function Premium() {
 
             {/* FEATURES LIST */}
             <div className="flex-1 w-full">
-              <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mb-6">Everything Included</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-widest mb-6">Everything Included</p>
               <ul className="space-y-4">
                 {features.map((f, i) => (
                   <li key={i} className="flex items-center gap-4 group">
-                    <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/20 transition-colors shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-indigo-500/10 border border-slate-200 dark:border-indigo-500/20 flex items-center justify-center text-slate-600 dark:text-indigo-400 group-hover:bg-indigo-500/20 transition-colors shrink-0">
                       {f.icon}
                     </div>
-                    <span className="text-white font-medium text-sm md:text-base">{f.label}</span>
-                    <Check size={16} className="ml-auto text-emerald-400 shrink-0" />
+                    <span className="text-slate-900 dark:text-white font-medium text-sm md:text-base">{f.label}</span>
+                    <Check size={16} className="ml-auto text-emerald-500 dark:text-emerald-400 shrink-0" />
                   </li>
                 ))}
               </ul>
             </div>
 
             {/* PRICE BOX */}
-            <div className="w-full md:w-72 shrink-0 flex flex-col items-center text-center bg-black/30 border border-white/10 rounded-2xl p-8">
+            <div className="w-full md:w-72 shrink-0 flex flex-col items-center text-center bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-2xl p-8">
               <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-2">Annual Plan</p>
               <div className="flex items-end gap-1 mb-1">
-                <span className="text-5xl font-black text-white">₹999</span>
-                <span className="text-slate-400 text-lg mb-2">/yr</span>
+                <span className="text-5xl font-black text-slate-900 dark:text-white">₹999</span>
+                <span className="text-slate-500 dark:text-slate-400 text-lg mb-2">/yr</span>
               </div>
-              <p className="text-emerald-400 text-sm font-bold mb-8">
+              <p className="text-emerald-600 dark:text-emerald-400 text-sm font-bold mb-8">
                 That's just ₹83/month
               </p>
 
@@ -160,16 +160,16 @@ export default function Premium() {
                 </button>
               )}
 
-              <p className="text-slate-600 text-xs mt-4">Secured by Razorpay · Cancel anytime</p>
+              <p className="text-slate-400 dark:text-slate-600 text-xs mt-4">Secured by Razorpay · Cancel anytime</p>
             </div>
           </div>
         </div>
 
         {/* TRUST BADGES */}
-        <div className="flex flex-wrap justify-center gap-6 text-slate-500 text-xs font-medium">
-          <span className="flex items-center gap-1.5"><Shield size={14} className="text-emerald-500" /> 256-bit Encryption</span>
-          <span className="flex items-center gap-1.5"><Check size={14} className="text-indigo-400" /> 30-Day Money Back</span>
-          <span className="flex items-center gap-1.5"><Star size={14} className="text-yellow-500" /> Trusted by 10,000+ users</span>
+        <div className="flex flex-wrap justify-center gap-6 text-slate-500 dark:text-slate-500 text-xs font-medium">
+          <span className="flex items-center gap-1.5"><Shield size={14} className="text-emerald-600 dark:text-emerald-500" /> 256-bit Encryption</span>
+          <span className="flex items-center gap-1.5"><Check size={14} className="text-indigo-600 dark:text-indigo-400" /> 30-Day Money Back</span>
+          <span className="flex items-center gap-1.5"><Star size={14} className="text-yellow-600 dark:text-yellow-500" /> Trusted by 10,000+ users</span>
         </div>
       </div>
     </div>

@@ -24,9 +24,9 @@ const Premium = lazy(() => import("./pages/Premium"));
 // 3. LOADING SCREEN (Optimized for dark mode and mobile)
 function LoadingScreen() {
   return (
-    <div className="h-[100dvh] w-full flex flex-col items-center justify-center bg-black text-white">
+    <div className="h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-50 text-slate-900 dark:bg-black dark:text-white transition-colors">
       <Loader2 className="animate-spin text-indigo-500 mb-4" size={40} />
-      <p className="text-slate-400 text-sm font-medium animate-pulse">Loading FlowState...</p>
+      <p className="text-slate-500 dark:text-slate-400 text-sm font-medium animate-pulse">Loading FlowState...</p>
     </div>
   );
 }
@@ -34,7 +34,7 @@ function LoadingScreen() {
 // 4. MAIN LAYOUT
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-[100dvh] w-full font-sans text-white bg-black selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-[100dvh] w-full font-sans text-slate-900 bg-slate-50 dark:text-white dark:bg-black selection:bg-indigo-500 selection:text-white transition-colors duration-300">
       {children}
     </div>
   );
